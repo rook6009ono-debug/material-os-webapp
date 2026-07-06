@@ -2675,7 +2675,9 @@
       }
     }
 
-    // 材料マスターから名前の一致候補を探す（完全一致を先頭に、部分一致を後ろに）
+    // 材料マスターから候補を探す
+    // 優先順：①材料名の完全一致 ②材料名の部分一致 ③カテゴリの一致
+    // 例：「ウレタン」→ カテゴリが「ウレタン材」の材料もすべて候補に出る
     function findMaterialCandidates(name) {
       const text = String(name || '').trim().toLowerCase();
 
@@ -2683,9 +2685,11 @@
 
       const exact = [];
       const partial = [];
+      const byCategory = [];
 
       appData.materials.forEach(function(mat) {
         const matName = String(mat.materialName || '').toLowerCase();
+        const matCategory = String(mat.category || '').toLowerCase();
 
         if (!matName) return;
 
@@ -2693,10 +2697,13 @@
           exact.push(mat);
         } else if (matName.indexOf(text) !== -1 || text.indexOf(matName) !== -1) {
           partial.push(mat);
+        } else if (matCategory &&
+                   (matCategory.indexOf(text) !== -1 || text.indexOf(matCategory) !== -1)) {
+          byCategory.push(mat);
         }
       });
 
-      return exact.concat(partial).slice(0, 8);
+      return exact.concat(partial).concat(byCategory).slice(0, 15);
     }
 
     function candidateLabel_(mat) {
