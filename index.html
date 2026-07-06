@@ -1,0 +1,3095 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>材料OS</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <style>
+    :root {
+      --bg: #f3f6f4;
+      --card: #ffffff;
+      --main: #1f2933;
+      --muted: #667085;
+      --line: #d7ded9;
+      --green: #7c8d4e;
+      --green-dark: #5d6d36;
+      --green-soft: #f3f6e8;
+      --blue-soft: #e0ecff;
+      --orange-soft: #fff3d6;
+      --red-soft: #fff0f0;
+      --yellow-soft: #fef3c7;
+    }
+
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      background: var(--bg);
+      color: var(--main);
+      font-size: 15px;
+    }
+
+    header {
+      background: linear-gradient(90deg, var(--green-dark), var(--green));
+      color: white;
+      padding: 15px 14px;
+      font-size: 21px;
+      font-weight: bold;
+      text-align: center;
+    }
+
+    .wrap {
+      padding: 12px;
+      max-width: 980px;
+      margin: 0 auto;
+    }
+
+    .tabs {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 12px;
+      flex-wrap: wrap;
+    }
+
+    .tab {
+      border: 1px solid var(--line);
+      background: white;
+      color: var(--main);
+      padding: 9px 12px;
+      border-radius: 999px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    .tab.active {
+      background: var(--green);
+      color: white;
+      border-color: var(--green);
+    }
+
+    .box {
+      background: var(--card);
+      padding: 12px;
+      border-radius: 12px;
+      margin-bottom: 12px;
+      border: 1px solid var(--line);
+    }
+
+    .box-title {
+      display: block;
+      color: var(--green-dark);
+      margin-bottom: 8px;
+      font-size: 16px;
+      font-weight: 800;
+    }
+
+    input,
+    select,
+    textarea {
+      width: 100%;
+      box-sizing: border-box;
+      padding: 10px 11px;
+      margin-top: 7px;
+      margin-bottom: 7px;
+      border: 1px solid var(--line);
+      border-radius: 9px;
+      font-size: 15px;
+      background: white;
+    }
+
+    textarea {
+      min-height: 70px;
+      resize: vertical;
+    }
+
+    .row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    @media (max-width: 640px) {
+      .row {
+        grid-template-columns: 1fr;
+        gap: 0;
+      }
+    }
+
+    .category-row {
+      display: flex;
+      gap: 7px;
+      flex-wrap: wrap;
+      margin: 8px 0 10px;
+    }
+
+    .category-btn {
+      border: 1px solid var(--line);
+      background: white;
+      border-radius: 999px;
+      padding: 7px 10px;
+      font-size: 13px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    .category-btn.active {
+      background: var(--green);
+      color: white;
+      border-color: var(--green);
+    }
+
+    .status {
+      color: var(--muted);
+      padding: 8px 2px;
+      font-size: 13px;
+    }
+
+    .message {
+      padding: 11px;
+      border-radius: 10px;
+      margin-bottom: 10px;
+      font-size: 14px;
+      background: var(--green-soft);
+      color: var(--green-dark);
+      border: 1px solid #b7eadb;
+      display: none;
+    }
+
+    .message.error {
+      color: #b00020;
+      background: var(--red-soft);
+      border: 1px solid #fecaca;
+    }
+
+    .list-head,
+    .list-row {
+      display: grid;
+      grid-template-columns: 1.75fr .65fr .55fr .45fr .75fr .55fr;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .list-head {
+      font-size: 12px;
+      color: var(--muted);
+      font-weight: bold;
+      padding: 8px 10px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .list-row {
+      background: white;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      padding: 9px 10px;
+      margin-bottom: 7px;
+    }
+
+    .material-name {
+      font-weight: 800;
+      line-height: 1.35;
+    }
+
+    .small {
+      font-size: 12px;
+      color: var(--muted);
+      margin-top: 2px;
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 4px 8px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 800;
+      text-align: center;
+      white-space: nowrap;
+    }
+
+    .badge-location-warehouse {
+      background: #dbeafe;
+      color: #1e40af;
+      border: 1px solid #bfdbfe;
+    }
+
+    .badge-location-excess {
+      background: #ffedd5;
+      color: #9a3412;
+      border: 1px solid #fed7aa;
+    }
+
+    .badge-location-site {
+      background: #dcfce7;
+      color: #166534;
+      border: 1px solid #bbf7d0;
+    }
+
+    .badge-location-order {
+      background: #ede9fe;
+      color: #5b21b6;
+      border: 1px solid #ddd6fe;
+    }
+
+    .badge-location-used {
+      background: #e5e7eb;
+      color: #374151;
+      border: 1px solid #d1d5db;
+    }
+
+    .badge-location-default {
+      background: #eef2ff;
+      color: #3730a3;
+      border: 1px solid #c7d2fe;
+    }
+
+    .qty {
+      text-align: right;
+    }
+
+    .qty-pill {
+      display: inline-block;
+      min-width: 42px;
+      text-align: center;
+      background: #ecfdf5;
+      color: #065f46;
+      padding: 6px 10px;
+      border-radius: 999px;
+      font-weight: 900;
+      font-size: 14px;
+      border: 1px solid #bbf7d0;
+    }
+
+    .qty-pill.zero {
+      background: #fee2e2;
+      color: #991b1b;
+      border: 1px solid #fecaca;
+    }
+
+    .qty-pill.low {
+      background: #fef3c7;
+      color: #92400e;
+      border: 1px solid #fde68a;
+    }
+
+    .unit {
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .money {
+      text-align: right;
+      font-weight: 900;
+      color: var(--green-dark);
+      font-size: 13px;
+      white-space: nowrap;
+    }
+
+    .money.zero {
+      color: var(--muted);
+      font-weight: 700;
+    }
+
+    .out-btn {
+      border: 0;
+      background: var(--green);
+      color: white;
+      padding: 7px 10px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 900;
+      cursor: pointer;
+      width: 100%;
+      min-width: 52px;
+    }
+
+    .out-btn:disabled {
+      opacity: .45;
+      cursor: not-allowed;
+    }
+
+    .partial-btn {
+      border: 1px solid #fed7aa;
+      background: #fff7ed;
+      color: #9a3412;
+      padding: 4px 8px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 900;
+      cursor: pointer;
+      margin-top: 3px;
+      display: inline-block;
+    }
+
+    .partial-card {
+      background: white;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 10px;
+      margin-bottom: 8px;
+    }
+
+    .partial-card-title {
+      font-weight: 900;
+      color: var(--main);
+      margin-bottom: 5px;
+      font-size: 14px;
+    }
+
+    .partial-card-line {
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.6;
+    }
+
+    .partial-card-qty {
+      display: inline-block;
+      background: #fff7ed;
+      color: #9a3412;
+      border: 1px solid #fed7aa;
+      border-radius: 999px;
+      padding: 4px 8px;
+      font-weight: 900;
+      margin-top: 4px;
+      font-size: 13px;
+    }
+
+    .empty {
+      color: var(--muted);
+      text-align: center;
+      padding: 22px;
+      background: white;
+      border-radius: 10px;
+      border: 1px solid var(--line);
+    }
+
+    .hidden {
+      display: none;
+    }
+
+    .main-btn {
+      width: 100%;
+      border: 0;
+      border-radius: 12px;
+      background: var(--green);
+      color: white;
+      padding: 14px;
+      font-size: 16px;
+      font-weight: 800;
+      cursor: pointer;
+      margin-top: 8px;
+    }
+
+    .main-btn:disabled {
+      opacity: .55;
+      cursor: not-allowed;
+    }
+
+    .cancel-btn {
+      width: 100%;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: white;
+      color: var(--main);
+      padding: 13px;
+      font-size: 15px;
+      font-weight: 800;
+      cursor: pointer;
+      margin-top: 8px;
+    }
+
+    .sub-note {
+      color: var(--muted);
+      font-size: 13px;
+      margin-bottom: 8px;
+    }
+
+    .out-summary {
+      background: var(--green-soft);
+      border: 1px solid #b7eadb;
+      border-radius: 12px;
+      padding: 11px;
+      margin: 8px 0 10px;
+    }
+
+    .out-material-title {
+      font-weight: 900;
+      color: var(--green-dark);
+      margin-bottom: 4px;
+    }
+
+    .out-amount {
+      background: #fff;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 12px;
+      margin-top: 8px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+
+    .amount-label {
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    .amount-value {
+      text-align: right;
+      font-weight: 900;
+      color: var(--green-dark);
+      font-size: 18px;
+    }
+
+    @media (max-width: 760px) {
+      .list-head {
+        display: none;
+      }
+
+      .list-row {
+        grid-template-columns: 1fr;
+        gap: 7px;
+      }
+
+      .qty,
+      .money {
+        text-align: left;
+      }
+
+      .out-btn {
+        width: auto;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <header>
+    材料OS<span id="headerCompany" style="font-size:13px; font-weight:normal;"></span>
+    <a id="logoutLink" class="hidden" onclick="logoutApp()"
+       style="float:right; color:#fff; font-size:12px; font-weight:normal; cursor:pointer; text-decoration:underline;">
+      ログアウト
+    </a>
+  </header>
+
+  <div class="wrap">
+    <!-- ログイン -->
+    <section id="screenLogin" class="hidden">
+      <div class="box">
+        <span class="box-title">ログイン</span>
+        <div class="sub-note">会社コードとアクセスキーを入力してください。</div>
+
+        <div id="loginApiUrlArea">
+          <input id="loginApiUrl" placeholder="APIのURL（https://script.google.com/macros/s/…/exec）">
+        </div>
+
+        <input id="loginCompanyCode" placeholder="会社コード（例：MOUNT）" autocapitalize="characters">
+        <input id="loginApiKey" type="password" placeholder="アクセスキー">
+
+        <button id="loginBtn" class="main-btn" onclick="submitLogin()">ログイン</button>
+      </div>
+    </section>
+
+    <div id="appTabs" class="tabs hidden">
+      <button id="tabSearch" class="tab active" onclick="showScreen('search', this)">材料を探す</button>
+      <button id="tabExcess" class="tab" onclick="showScreen('excess', this)">余り材料</button>
+      <button class="tab" onclick="showScreen('stock', this)">自社在庫</button>
+      <button class="tab" onclick="showScreen('cycle', this)">材料循環</button>
+      <button id="tabOrder" class="tab" onclick="showScreen('order', this)">注文・入荷</button>
+      <button id="tabMove" class="tab" onclick="showScreen('move', this)">現場間移動</button>
+      <button id="tabVoice" class="tab" onclick="showScreen('voice', this)">音声入力</button>
+    </div>
+
+    <div id="message" class="message"></div>
+
+    <!-- 材料を探す -->
+    <section id="screenSearch" class="hidden">
+      <div class="box">
+        <span class="box-title">材料を探す</span>
+
+        <input
+          id="keyword"
+          type="text"
+          placeholder="材料名・現場名・工番で検索"
+          oninput="renderMaterialLocations()"
+        >
+
+        <div id="searchCategoryButtons" class="category-row"></div>
+
+        <select id="locationFilter" onchange="renderMaterialLocations()">
+          <option value="">所在区分：すべて</option>
+          <option value="倉庫">倉庫</option>
+          <option value="現場">現場</option>
+          <option value="注文中">注文中</option>
+        </select>
+      </div>
+
+      <div id="outBox" class="box hidden">
+        <span class="box-title">出庫登録</span>
+
+        <div class="out-summary">
+          <div id="outMaterialTitle" class="out-material-title"></div>
+          <div id="outMaterialInfo" class="small"></div>
+        </div>
+
+        <select id="outEmployeeSelect">
+          <option value="">社員を選択</option>
+        </select>
+
+        <input
+          id="outJobKeyword"
+          placeholder="工番・現場名で検索"
+          oninput="renderOutJobOptions()"
+        >
+
+        <select id="outJobSelect">
+          <option value="">工番を選択</option>
+        </select>
+
+        <div class="row">
+          <select id="outQuantity" onchange="updateOutAmount()">
+            <option value="">出庫数量</option>
+          </select>
+
+          <input id="outUnit" placeholder="単位" readonly>
+        </div>
+
+        <div class="out-amount">
+          <div>
+            <div class="amount-label">単価</div>
+            <div id="outUnitPriceText" class="amount-value">0円</div>
+          </div>
+          <div>
+            <div class="amount-label">出庫金額</div>
+            <div id="outAmountText" class="amount-value">0円</div>
+          </div>
+        </div>
+
+        <textarea id="outMemo" placeholder="備考"></textarea>
+
+        <button id="outSubmitBtn" class="main-btn" onclick="submitMaterialOut()">出庫登録</button>
+        <button class="cancel-btn" onclick="cancelMaterialOut()">キャンセル</button>
+      </div>
+
+      <div id="partialBox" class="box hidden">
+        <span class="box-title">半端材料詳細</span>
+
+        <div class="out-summary">
+          <div id="partialMaterialTitle" class="out-material-title"></div>
+          <div id="partialMaterialInfo" class="small"></div>
+        </div>
+
+        <div id="partialList"></div>
+
+        <div id="partialOutBox" class="box hidden">
+          <span class="box-title">半端出庫登録</span>
+
+          <div class="out-summary">
+            <div id="partialOutTitle" class="out-material-title"></div>
+            <div id="partialOutInfo" class="small"></div>
+          </div>
+
+          <select id="partialOutEmployeeSelect">
+            <option value="">社員を選択</option>
+          </select>
+
+          <input
+            id="partialOutJobKeyword"
+            placeholder="工番・現場名で検索"
+            oninput="renderPartialOutJobOptions()"
+          >
+
+          <select id="partialOutJobSelect">
+            <option value="">工番を選択</option>
+          </select>
+
+          <textarea id="partialOutMemo" placeholder="備考"></textarea>
+
+          <button
+            id="partialOutSubmitBtn"
+            class="main-btn"
+            onclick="submitPartialOut()"
+          >
+            この半端を出庫登録
+          </button>
+
+          <button class="cancel-btn" onclick="cancelPartialOut()">キャンセル</button>
+        </div>
+
+        <button class="cancel-btn" onclick="closePartialBox()">閉じる</button>
+      </div>
+
+      <div id="status" class="status">読み込み中...</div>
+
+      <div class="list-head">
+        <div>材料</div>
+        <div>所在</div>
+        <div style="text-align:right;">数量</div>
+        <div>単位</div>
+        <div style="text-align:right;">金額</div>
+        <div>操作</div>
+      </div>
+
+      <div id="list"></div>
+    </section>
+
+    <!-- 余り材料登録 -->
+    <section id="screenExcess" class="hidden">
+      <div class="box">
+        <span class="box-title">余り材料登録</span>
+        <div class="sub-note">社員・工番を選んで、余った材料を登録します。</div>
+
+        <select id="exEmployeeSelect">
+          <option value="">社員を選択</option>
+        </select>
+
+        <input
+          id="jobKeyword"
+          placeholder="工番・現場名で検索"
+          oninput="renderJobOptions()"
+        >
+
+        <select id="exJobSelect">
+          <option value="">工番を選択</option>
+        </select>
+
+        <div class="sub-note">カテゴリ</div>
+        <div id="excessCategoryButtons" class="category-row"></div>
+
+        <select id="exMaterialSelect" onchange="onExcessMaterialChange()">
+          <option value="">材料マスターから選択</option>
+        </select>
+
+        <input id="exMaterialName" placeholder="材料名 手入力・修正可">
+
+        <div class="row">
+          <select id="exQuantity">
+            <option value="">数量</option>
+          </select>
+
+          <input id="exUnit" placeholder="単位 例：個・缶・本">
+        </div>
+
+        <div class="row">
+          <select id="exPartialQuantity">
+            <option value="">半端数量なし</option>
+            <option value="0.1">0.1</option>
+            <option value="0.2">0.2</option>
+            <option value="0.3">0.3</option>
+            <option value="0.4">0.4</option>
+            <option value="0.5">0.5</option>
+            <option value="0.6">0.6</option>
+            <option value="0.7">0.7</option>
+            <option value="0.8">0.8</option>
+            <option value="0.9">0.9</option>
+          </select>
+
+          <input id="exPartialUnit" placeholder="半端単位 例：缶・本・m">
+        </div>
+
+        <div class="row">
+          <select id="exStatus">
+            <option value="未開封">未開封</option>
+            <option value="開封済">開封済</option>
+            <option value="半端あり">半端あり</option>
+          </select>
+
+          <input id="exStorageStatus" placeholder="保管状態 例：倉庫棚A・現場保管">
+        </div>
+
+        <textarea id="exMemo" placeholder="メモ"></textarea>
+
+        <button id="exSubmitBtn" class="main-btn" onclick="submitExcessMaterial()">余り材を登録</button>
+      </div>
+    </section>
+
+    <!-- 注文・入荷 -->
+    <section id="screenOrder" class="hidden">
+      <div class="box">
+        <span class="box-title">入荷登録</span>
+        <div class="sub-note">倉庫に入った材料を登録します。</div>
+
+        <input id="arrivalDate" type="date">
+
+        <select id="arrivalEmployeeSelect">
+          <option value="">担当者を選択</option>
+        </select>
+
+        <div class="sub-note">カテゴリ</div>
+        <div id="arrivalCategoryButtons" class="category-row"></div>
+
+        <select id="arrivalMaterialSelect" onchange="onArrivalMaterialChange()">
+          <option value="">材料を選択</option>
+        </select>
+
+        <input id="arrivalMaterialName" placeholder="材料名" readonly>
+
+        <div class="row">
+          <select id="arrivalQuantity" onchange="updateArrivalAmount()">
+            <option value="">入荷数量</option>
+          </select>
+
+          <input id="arrivalUnit" placeholder="単位" readonly>
+        </div>
+
+        <div class="row">
+          <input id="arrivalUnitPrice" type="number" placeholder="単価" oninput="updateArrivalAmount()">
+          <input id="arrivalOrderId" placeholder="注文ID 任意">
+        </div>
+
+        <div class="out-amount">
+          <div>
+            <div class="amount-label">単価</div>
+            <div id="arrivalUnitPriceText" class="amount-value">0円</div>
+          </div>
+          <div>
+            <div class="amount-label">入荷金額</div>
+            <div id="arrivalAmountText" class="amount-value">0円</div>
+          </div>
+        </div>
+
+        <textarea id="arrivalMemo" placeholder="備考"></textarea>
+
+        <button id="arrivalSubmitBtn" class="main-btn" onclick="submitArrival()">入荷登録</button>
+      </div>
+    </section>
+
+    <!-- 現場間移動 -->
+    <section id="screenMove" class="hidden">
+      <div class="box">
+        <span class="box-title">現場間移動</span>
+        <div class="sub-note">現場Aから現場Bへ材料を移動します。会社全体の在庫数は変わりません。</div>
+
+        <select id="moveEmployeeSelect">
+          <option value="">担当者を選択</option>
+        </select>
+
+        <div class="sub-note">移動元</div>
+
+        <input
+          id="moveFromJobKeyword"
+          placeholder="移動元の工番・現場名で検索"
+          oninput="renderMoveFromJobOptions()"
+        >
+
+        <select id="moveFromJobSelect">
+          <option value="">移動元の工番を選択</option>
+        </select>
+
+        <div class="sub-note">移動先</div>
+
+        <input
+          id="moveToJobKeyword"
+          placeholder="移動先の工番・現場名で検索"
+          oninput="renderMoveToJobOptions()"
+        >
+
+        <select id="moveToJobSelect">
+          <option value="">移動先の工番を選択</option>
+        </select>
+
+        <div class="sub-note">カテゴリ</div>
+        <div id="moveCategoryButtons" class="category-row"></div>
+
+        <select id="moveMaterialSelect" onchange="onMoveMaterialChange()">
+          <option value="">材料を選択</option>
+        </select>
+
+        <div class="row">
+          <select id="moveQuantity">
+            <option value="">移動数量</option>
+          </select>
+
+          <input id="moveUnit" placeholder="単位" readonly>
+        </div>
+
+        <textarea id="moveMemo" placeholder="備考"></textarea>
+
+        <button id="moveSubmitBtn" class="main-btn" onclick="submitMaterialMove()">現場間移動を登録</button>
+      </div>
+    </section>
+
+    <!-- 音声入力 -->
+    <section id="screenVoice" class="hidden">
+      <div class="box">
+        <span class="box-title">音声入力</span>
+        <div class="sub-note">
+          <b>使い方：</b>「録音開始」→ 話す →「停止」で自動的に文字になります。<br>
+          例：「自着シート 3本 出庫」「サンセット 2個 入荷」<br>
+          （キーボードのマイクボタンや手入力でもOKです）
+        </div>
+
+        <div class="row">
+          <button id="voiceRecBtn" class="main-btn" onclick="startVoiceRecording()">🎤 録音開始</button>
+          <button id="voiceRecStopBtn" class="cancel-btn" onclick="stopVoiceRecording()" disabled>停止して文字にする</button>
+        </div>
+
+        <div id="voiceSupportNote" class="sub-note hidden">
+          このブラウザは録音に対応していません。テキスト入力をご利用ください。
+        </div>
+
+        <textarea id="voiceText" placeholder="音声テキスト（手入力・修正できます）"></textarea>
+
+        <select id="voiceActionSelect" onchange="onVoiceActionTypeChange()">
+          <option value="">処理区分（解析で自動判定）</option>
+          <option value="出庫">出庫</option>
+          <option value="入荷">入荷</option>
+          <option value="余り戻し">余り戻し</option>
+          <option value="現場間移動">現場間移動</option>
+        </select>
+
+        <select id="voiceEmployeeSelect">
+          <option value="">社員を選択</option>
+        </select>
+
+        <div id="voiceJobArea">
+          <input
+            id="voiceJobKeyword"
+            placeholder="工番・現場名で検索"
+            oninput="renderVoiceJobOptions()"
+          >
+
+          <select id="voiceJobSelect">
+            <option value="">工番を選択（入荷は省略可）</option>
+          </select>
+        </div>
+
+        <div id="voiceMoveArea" class="hidden">
+          <div class="sub-note">移動元</div>
+
+          <input
+            id="voiceFromJobKeyword"
+            placeholder="移動元の工番・現場名で検索"
+            oninput="renderVoiceFromJobOptions()"
+          >
+
+          <select id="voiceFromJobSelect">
+            <option value="">移動元の工番を選択</option>
+          </select>
+
+          <div class="sub-note">移動先</div>
+
+          <input
+            id="voiceToJobKeyword"
+            placeholder="移動先の工番・現場名で検索"
+            oninput="renderVoiceToJobOptions()"
+          >
+
+          <select id="voiceToJobSelect">
+            <option value="">移動先の工番を選択</option>
+          </select>
+        </div>
+
+        <button id="voiceAnalyzeBtn" class="main-btn" onclick="analyzeVoiceText()">解析する</button>
+
+        <div id="voiceResultBox" class="out-summary hidden">
+          <div id="voiceResultTitle" class="out-material-title"></div>
+          <div id="voiceResultInfo" class="small"></div>
+        </div>
+
+        <div id="voiceConfirmArea" class="hidden">
+          <div class="row">
+            <input id="voiceQuantity" type="number" step="0.1" placeholder="数量（修正可）">
+            <input id="voiceUnit" placeholder="単位（修正可）">
+          </div>
+
+          <button id="voiceRegisterBtn" class="main-btn hidden" onclick="submitVoiceAction()">この内容で登録</button>
+
+          <div id="voiceTempArea" class="hidden">
+            <div class="sub-note">材料マスターに見つかりませんでした。仮材料として登録できます。</div>
+            <input id="voiceTempName" placeholder="仮材料名（修正可）">
+            <button id="voiceTempBtn" class="main-btn" onclick="submitVoiceTemporary()">仮材料として登録</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 仮画面 -->
+    <section id="screenComingSoon" class="hidden">
+      <div class="box">
+        <span id="comingSoonTitle" class="box-title">準備中</span>
+        <div class="sub-note">この機能は次の工程で作ります。</div>
+      </div>
+    </section>
+  </div>
+
+  <script>
+    let appData = {
+      employees: [],
+      jobs: [],
+      categories: [],
+      materials: [],
+      materialLocations: []
+    };
+
+    let selectedSearchCategory = '';
+    let selectedExcessCategory = '';
+    let selectedArrivalCategory = '';
+    let selectedOutItem = null;
+    let selectedPartialItem = null;
+
+    // ==================================================
+    // API接続（外部ホスティング版）
+    // ==================================================
+
+    // デプロイ後にAPIのURL（https://script.google.com/macros/s/…/exec）を
+    // 入れておくと、ログイン画面のURL入力欄が非表示になります
+    const DEFAULT_API_URL = '';
+
+    let SESSION = null;
+
+    function loadSession() {
+      try {
+        SESSION = JSON.parse(localStorage.getItem('zairyoOsSession') || 'null');
+      } catch (e) {
+        SESSION = null;
+      }
+    }
+
+    function saveSession() {
+      localStorage.setItem('zairyoOsSession', JSON.stringify(SESSION));
+    }
+
+    function clearSession() {
+      localStorage.removeItem('zairyoOsSession');
+      SESSION = null;
+    }
+
+    function callApi(method, payload, onSuccess, onFailure) {
+      if (!SESSION || !SESSION.apiUrl) {
+        onFailure({ message: 'ログインしてください' });
+        return;
+      }
+
+      // GAS側の関数名とAPIアクションの対応（ForWeb系はJSON文字列を期待する既存処理に合わせる）
+      const map = {
+        getAppDataForWeb: { action: 'getAppData', stringify: true },
+        getPartialMaterialsForWeb: {
+          action: 'getPartialMaterials',
+          stringify: true,
+          wrap: function(p) { return { materialId: p }; }
+        }
+      };
+
+      const m = map[method] || { action: method };
+
+      const body = {
+        apiKey: SESSION.apiKey,
+        companyCode: SESSION.companyCode,
+        action: m.action,
+        payload: m.wrap ? m.wrap(payload) : (payload === undefined ? {} : payload)
+      };
+
+      fetch(SESSION.apiUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+        body: JSON.stringify(body)
+      })
+        .then(function(response) { return response.json(); })
+        .then(function(res) {
+          if (res && res.ok) {
+            onSuccess(m.stringify ? JSON.stringify(res.data) : res.data);
+          } else {
+            onFailure({ message: (res && res.error) || 'APIエラー' });
+          }
+        })
+        .catch(function(err) {
+          onFailure({ message: '通信エラー：' + (err.message || err) });
+        });
+    }
+
+    // 既存コードの google.script.run 呼び出しをそのまま動かす互換レイヤー
+    const google = { script: {} };
+
+    Object.defineProperty(google.script, 'run', {
+      get: function() {
+        let onS = function() {};
+        let onF = function(err) { showMessage(err.message || 'エラー', true); };
+
+        const chain = {
+          withSuccessHandler: function(fn) { onS = fn; return proxy; },
+          withFailureHandler: function(fn) { onF = fn; return proxy; }
+        };
+
+        const proxy = new Proxy(chain, {
+          get: function(target, prop) {
+            if (prop in target) return target[prop];
+            return function(payload) { callApi(String(prop), payload, onS, onF); };
+          }
+        });
+
+        return proxy;
+      }
+    });
+
+    // ==================================================
+    // ログイン
+    // ==================================================
+
+    function submitLogin() {
+      const apiUrl = DEFAULT_API_URL || getValue('loginApiUrl');
+      const companyCode = getValue('loginCompanyCode').toUpperCase();
+      const apiKey = document.getElementById('loginApiKey').value.trim();
+
+      if (!apiUrl) {
+        showMessage('APIのURLを入力してください', true);
+        return;
+      }
+
+      if (!companyCode) {
+        showMessage('会社コードを入力してください', true);
+        return;
+      }
+
+      if (!apiKey) {
+        showMessage('アクセスキーを入力してください', true);
+        return;
+      }
+
+      SESSION = { apiUrl: apiUrl, companyCode: companyCode, apiKey: apiKey, companyName: '' };
+
+      const btn = document.getElementById('loginBtn');
+      btn.disabled = true;
+      btn.innerText = '確認中...';
+
+      google.script.run
+        .withSuccessHandler(function(res) {
+          btn.disabled = false;
+          btn.innerText = 'ログイン';
+
+          SESSION.companyName = (res && res.companyName) || companyCode;
+          saveSession();
+
+          showApp();
+          loadAppData();
+        })
+        .withFailureHandler(function(error) {
+          btn.disabled = false;
+          btn.innerText = 'ログイン';
+
+          SESSION = null;
+          showMessage('ログイン失敗：' + (error.message || error), true);
+        })
+        .ping({});
+    }
+
+    function showApp() {
+      document.getElementById('screenLogin').classList.add('hidden');
+      document.getElementById('appTabs').classList.remove('hidden');
+      document.getElementById('logoutLink').classList.remove('hidden');
+
+      document.getElementById('headerCompany').innerText =
+        SESSION && SESSION.companyName ? '｜' + SESSION.companyName : '';
+
+      showScreen('search', document.getElementById('tabSearch'));
+    }
+
+    function showLoginScreen() {
+      document.getElementById('screenLogin').classList.remove('hidden');
+      document.getElementById('appTabs').classList.add('hidden');
+      document.getElementById('logoutLink').classList.add('hidden');
+
+      ['screenSearch', 'screenExcess', 'screenOrder', 'screenMove', 'screenVoice', 'screenComingSoon']
+        .forEach(function(id) {
+          document.getElementById(id).classList.add('hidden');
+        });
+
+      if (DEFAULT_API_URL) {
+        document.getElementById('loginApiUrlArea').classList.add('hidden');
+      }
+    }
+
+    function logoutApp() {
+      clearSession();
+      location.reload();
+    }
+
+    function initApp() {
+      loadSession();
+
+      if (SESSION && SESSION.apiUrl && SESSION.apiKey && SESSION.companyCode) {
+        showApp();
+        loadAppData();
+      } else {
+        showLoginScreen();
+      }
+    }
+
+    function showScreen(screen, btn) {
+      document.getElementById('screenSearch').classList.add('hidden');
+      document.getElementById('screenExcess').classList.add('hidden');
+      document.getElementById('screenOrder').classList.add('hidden');
+      document.getElementById('screenMove').classList.add('hidden');
+      document.getElementById('screenVoice').classList.add('hidden');
+      document.getElementById('screenComingSoon').classList.add('hidden');
+
+      document.querySelectorAll('.tab').forEach(function(tab) {
+        tab.classList.remove('active');
+      });
+
+      if (btn) {
+        btn.classList.add('active');
+      }
+
+      if (screen === 'search') {
+        document.getElementById('screenSearch').classList.remove('hidden');
+        renderMaterialLocations();
+        return;
+      }
+
+      if (screen === 'excess') {
+        document.getElementById('screenExcess').classList.remove('hidden');
+        return;
+      }
+
+      if (screen === 'order') {
+        document.getElementById('screenOrder').classList.remove('hidden');
+        return;
+      }
+
+      if (screen === 'move') {
+        document.getElementById('screenMove').classList.remove('hidden');
+        return;
+      }
+
+      if (screen === 'voice') {
+        document.getElementById('screenVoice').classList.remove('hidden');
+        return;
+      }
+
+      document.getElementById('screenComingSoon').classList.remove('hidden');
+
+      if (screen === 'stock') {
+        document.getElementById('comingSoonTitle').innerText = '自社在庫：準備中';
+      }
+
+      if (screen === 'cycle') {
+        document.getElementById('comingSoonTitle').innerText = '材料循環：準備中';
+      }
+    }
+
+    function loadAppData() {
+      document.getElementById('status').innerText = '読み込み中...';
+
+      google.script.run
+        .withSuccessHandler(function(json) {
+          try {
+            appData = JSON.parse(json || '{}');
+          } catch (e) {
+            showMessage('JSON変換エラー：' + e.message, true);
+            return;
+          }
+
+          appData.employees = appData.employees || [];
+          appData.jobs = appData.jobs || [];
+          appData.categories = appData.categories || [];
+          appData.materials = appData.materials || [];
+          appData.materialLocations = appData.materialLocations || [];
+
+          setupInitialOptions();
+
+          document.getElementById('status').innerText =
+            '取得件数：' + appData.materialLocations.length + '件';
+
+          renderMaterialLocations();
+        })
+        .withFailureHandler(function(error) {
+          showMessage('読み込みエラー：' + (error.message || error), true);
+        })
+        .getAppDataForWeb();
+    }
+
+    function setupInitialOptions() {
+      renderEmployeeOptions();
+      renderOutEmployeeOptions();
+      renderArrivalEmployeeOptions();
+      renderPartialOutEmployeeOptions();
+
+      renderJobOptions();
+      renderOutJobOptions();
+      renderPartialOutJobOptions();
+
+      renderQuantityOptions();
+      renderArrivalQuantityOptions();
+
+      renderSearchCategoryButtons();
+      renderExcessCategoryButtons();
+      renderArrivalCategoryButtons();
+
+      renderExcessMaterialOptions();
+      renderArrivalMaterialOptions();
+
+      setTodayToArrivalDate();
+
+      renderMoveEmployeeOptions();
+      renderMoveFromJobOptions();
+      renderMoveToJobOptions();
+      renderMoveCategoryButtons();
+      renderMoveMaterialOptions();
+      renderMoveQuantityOptions();
+
+      renderVoiceEmployeeOptions();
+      renderVoiceJobOptions();
+      renderVoiceFromJobOptions();
+      renderVoiceToJobOptions();
+    }
+
+    function renderEmployeeOptions() {
+      const select = document.getElementById('exEmployeeSelect');
+
+      select.innerHTML =
+        '<option value="">社員を選択</option>' +
+        appData.employees.map(function(emp) {
+          const label = emp.employeeId + '　' + emp.employeeName;
+          return '<option value="' + escapeAttr(emp.employeeId) + '">' + escapeHtml(label) + '</option>';
+        }).join('');
+    }
+
+    function renderOutEmployeeOptions() {
+      const select = document.getElementById('outEmployeeSelect');
+
+      select.innerHTML =
+        '<option value="">社員を選択</option>' +
+        appData.employees.map(function(emp) {
+          const label = emp.employeeId + '　' + emp.employeeName;
+          return '<option value="' + escapeAttr(emp.employeeId) + '">' + escapeHtml(label) + '</option>';
+        }).join('');
+    }
+
+    function renderArrivalEmployeeOptions() {
+      const select = document.getElementById('arrivalEmployeeSelect');
+
+      select.innerHTML =
+        '<option value="">担当者を選択</option>' +
+        appData.employees.map(function(emp) {
+          const label = emp.employeeId + '　' + emp.employeeName;
+          return '<option value="' + escapeAttr(emp.employeeId) + '">' + escapeHtml(label) + '</option>';
+        }).join('');
+    }
+
+    function renderPartialOutEmployeeOptions() {
+      const select = document.getElementById('partialOutEmployeeSelect');
+
+      if (!select) return;
+
+      select.innerHTML =
+        '<option value="">社員を選択</option>' +
+        appData.employees.map(function(emp) {
+          const label = emp.employeeId + '　' + emp.employeeName;
+          return '<option value="' + escapeAttr(emp.employeeId) + '">' + escapeHtml(label) + '</option>';
+        }).join('');
+    }
+
+    function renderJobOptions() {
+      const select = document.getElementById('exJobSelect');
+      const keyword = document.getElementById('jobKeyword').value.trim().toLowerCase();
+
+      const filtered = appData.jobs.filter(function(job) {
+        const text = (job.jobNo + ' ' + job.jobName).toLowerCase();
+        return !keyword || text.indexOf(keyword) !== -1;
+      }).slice(0, 200);
+
+      select.innerHTML =
+        '<option value="">工番を選択</option>' +
+        filtered.map(function(job) {
+          const label = job.jobNo + '　' + job.jobName;
+          return '<option value="' + escapeAttr(job.jobNo) + '">' + escapeHtml(label) + '</option>';
+        }).join('');
+    }
+
+    function renderOutJobOptions() {
+      const select = document.getElementById('outJobSelect');
+      const keyword = document.getElementById('outJobKeyword').value.trim().toLowerCase();
+
+      const filtered = appData.jobs.filter(function(job) {
+        const text = (job.jobNo + ' ' + job.jobName).toLowerCase();
+        return !keyword || text.indexOf(keyword) !== -1;
+      }).slice(0, 200);
+
+      select.innerHTML =
+        '<option value="">工番を選択</option>' +
+        filtered.map(function(job) {
+          const label = job.jobNo + '　' + job.jobName;
+          return '<option value="' + escapeAttr(job.jobNo) + '">' + escapeHtml(label) + '</option>';
+        }).join('');
+    }
+
+    function renderPartialOutJobOptions() {
+      const select = document.getElementById('partialOutJobSelect');
+      const keywordEl = document.getElementById('partialOutJobKeyword');
+
+      if (!select || !keywordEl) return;
+
+      const keyword = keywordEl.value.trim().toLowerCase();
+
+      const filtered = appData.jobs.filter(function(job) {
+        const text = (job.jobNo + ' ' + job.jobName).toLowerCase();
+        return !keyword || text.indexOf(keyword) !== -1;
+      }).slice(0, 200);
+
+      select.innerHTML =
+        '<option value="">工番を選択</option>' +
+        filtered.map(function(job) {
+          const label = job.jobNo + '　' + job.jobName;
+          return '<option value="' + escapeAttr(job.jobNo) + '">' + escapeHtml(label) + '</option>';
+        }).join('');
+    }
+
+    function renderQuantityOptions() {
+      const select = document.getElementById('exQuantity');
+      let html = '<option value="">数量</option>';
+
+      for (let i = 1; i <= 50; i++) {
+        html += '<option value="' + i + '">' + i + '</option>';
+      }
+
+      select.innerHTML = html;
+    }
+
+    function renderOutQuantityOptions(maxQty) {
+      const select = document.getElementById('outQuantity');
+      const max = Math.max(1, Math.floor(Number(maxQty || 0)));
+      let html = '<option value="">出庫数量</option>';
+
+      for (let i = 1; i <= max; i++) {
+        html += '<option value="' + i + '">' + i + '</option>';
+      }
+
+      select.innerHTML = html;
+    }
+
+    function renderArrivalQuantityOptions() {
+      const select = document.getElementById('arrivalQuantity');
+      let html = '<option value="">入荷数量</option>';
+
+      for (let i = 1; i <= 200; i++) {
+        html += '<option value="' + i + '">' + i + '</option>';
+      }
+
+      select.innerHTML = html;
+    }
+
+    function renderSearchCategoryButtons() {
+      const el = document.getElementById('searchCategoryButtons');
+
+      let html =
+        '<button class="category-btn ' +
+        (selectedSearchCategory === '' ? 'active' : '') +
+        '" onclick="setSearchCategory(\'\')">全部</button>';
+
+      appData.categories.forEach(function(cat) {
+        const active = selectedSearchCategory === cat.categoryName ? 'active' : '';
+
+        html +=
+          '<button class="category-btn ' +
+          active +
+          '" onclick="setSearchCategory(\'' +
+          escapeJs(cat.categoryName) +
+          '\')">' +
+          escapeHtml(cat.categoryName) +
+          '</button>';
+      });
+
+      el.innerHTML = html;
+    }
+
+    function setSearchCategory(categoryName) {
+      selectedSearchCategory = categoryName || '';
+      renderSearchCategoryButtons();
+      renderMaterialLocations();
+    }
+
+    function renderExcessCategoryButtons() {
+      const el = document.getElementById('excessCategoryButtons');
+
+      let html =
+        '<button class="category-btn ' +
+        (selectedExcessCategory === '' ? 'active' : '') +
+        '" onclick="setExcessCategory(\'\')">全部</button>';
+
+      appData.categories.forEach(function(cat) {
+        const active = selectedExcessCategory === cat.categoryName ? 'active' : '';
+
+        html +=
+          '<button class="category-btn ' +
+          active +
+          '" onclick="setExcessCategory(\'' +
+          escapeJs(cat.categoryName) +
+          '\')">' +
+          escapeHtml(cat.categoryName) +
+          '</button>';
+      });
+
+      el.innerHTML = html;
+    }
+
+    function setExcessCategory(categoryName) {
+      selectedExcessCategory = categoryName || '';
+      document.getElementById('exMaterialSelect').value = '';
+      renderExcessCategoryButtons();
+      renderExcessMaterialOptions();
+    }
+
+    function renderArrivalCategoryButtons() {
+      const el = document.getElementById('arrivalCategoryButtons');
+
+      let html =
+        '<button class="category-btn ' +
+        (selectedArrivalCategory === '' ? 'active' : '') +
+        '" onclick="setArrivalCategory(\'\')">全部</button>';
+
+      appData.categories.forEach(function(cat) {
+        const active = selectedArrivalCategory === cat.categoryName ? 'active' : '';
+
+        html +=
+          '<button class="category-btn ' +
+          active +
+          '" onclick="setArrivalCategory(\'' +
+          escapeJs(cat.categoryName) +
+          '\')">' +
+          escapeHtml(cat.categoryName) +
+          '</button>';
+      });
+
+      el.innerHTML = html;
+    }
+
+    function setArrivalCategory(categoryName) {
+      selectedArrivalCategory = categoryName || '';
+      document.getElementById('arrivalMaterialSelect').value = '';
+      renderArrivalCategoryButtons();
+      renderArrivalMaterialOptions();
+    }
+
+    function renderExcessMaterialOptions() {
+      const select = document.getElementById('exMaterialSelect');
+
+      const filtered = appData.materials.filter(function(mat) {
+        return !selectedExcessCategory || mat.category === selectedExcessCategory;
+      });
+
+      select.innerHTML =
+        '<option value="">材料マスターから選択</option>' +
+        filtered.map(function(mat) {
+          const label = mat.materialName + ' / ' + (mat.unit || '') + ' / ' + (mat.category || '');
+          return '<option value="' + escapeAttr(mat.materialId) + '">' + escapeHtml(label) + '</option>';
+        }).join('');
+    }
+
+    function renderArrivalMaterialOptions() {
+      const select = document.getElementById('arrivalMaterialSelect');
+
+      const filtered = appData.materials.filter(function(mat) {
+        return !selectedArrivalCategory || mat.category === selectedArrivalCategory;
+      });
+
+      select.innerHTML =
+        '<option value="">材料を選択</option>' +
+        filtered.map(function(mat) {
+          const label = mat.materialName + ' / ' + (mat.unit || '') + ' / ' + (mat.category || '');
+          return '<option value="' + escapeAttr(mat.materialId) + '">' + escapeHtml(label) + '</option>';
+        }).join('');
+    }
+
+    function onExcessMaterialChange() {
+      const materialId = document.getElementById('exMaterialSelect').value;
+
+      const material = appData.materials.find(function(mat) {
+        return String(mat.materialId) === String(materialId);
+      });
+
+      if (!material) return;
+
+      document.getElementById('exMaterialName').value = material.materialName || '';
+      document.getElementById('exUnit').value = material.unit || '';
+
+      selectedExcessCategory = material.category || selectedExcessCategory;
+      renderExcessCategoryButtons();
+    }
+
+    function onArrivalMaterialChange() {
+      const materialId = document.getElementById('arrivalMaterialSelect').value;
+
+      const material = appData.materials.find(function(mat) {
+        return String(mat.materialId) === String(materialId);
+      });
+
+      if (!material) return;
+
+      document.getElementById('arrivalMaterialName').value = material.materialName || '';
+      document.getElementById('arrivalUnit').value = material.unit || '';
+      document.getElementById('arrivalUnitPrice').value = Number(material.unitPrice || 0);
+
+      selectedArrivalCategory = material.category || selectedArrivalCategory;
+      renderArrivalCategoryButtons();
+      updateArrivalAmount();
+    }
+
+    function getLocationClass(locationType) {
+      const value = String(locationType || '').trim();
+
+      if (value.indexOf('倉庫') !== -1) {
+        return 'badge-location-warehouse';
+      }
+
+      if (value.indexOf('余剰') !== -1 || value.indexOf('余り') !== -1) {
+        return 'badge-location-excess';
+      }
+
+      if (value.indexOf('現場') !== -1) {
+        return 'badge-location-site';
+      }
+
+      if (value.indexOf('注文') !== -1) {
+        return 'badge-location-order';
+      }
+
+      if (value.indexOf('使用済') !== -1) {
+        return 'badge-location-used';
+      }
+
+      return 'badge-location-default';
+    }
+
+    function getLocationLabel(locationType) {
+      return String(locationType || '').trim();
+    }
+
+    function getQtyClass(qty) {
+      const num = Number(qty || 0);
+
+      if (num <= 0) {
+        return 'qty-pill zero';
+      }
+
+      if (num <= 3) {
+        return 'qty-pill low';
+      }
+
+      return 'qty-pill';
+    }
+
+    function renderMaterialLocations() {
+      const keyword = document.getElementById('keyword').value.trim().toLowerCase();
+      const locationFilter = document.getElementById('locationFilter').value;
+      const list = document.getElementById('list');
+
+      const filtered = appData.materialLocations.filter(function(item) {
+        const location = String(item['所在区分'] || '').trim();
+        const category = String(item['カテゴリ'] || '').trim();
+
+        const text = [
+          item['材料ID'],
+          item['材料名'],
+          item['カテゴリ'],
+          item['所在区分'],
+          item['工番'],
+          item['現場名'],
+          item['状態'],
+          item['備考']
+        ].map(function(v) {
+          return String(v || '');
+        }).join(' ').toLowerCase();
+
+        const matchKeyword = !keyword || text.indexOf(keyword) !== -1;
+        const matchLocation = !locationFilter || location === locationFilter;
+        const matchCategory = !selectedSearchCategory || category === selectedSearchCategory;
+
+        return matchKeyword && matchLocation && matchCategory;
+      });
+
+      document.getElementById('status').innerText =
+        '表示件数：' + filtered.length + '件 / 全' + appData.materialLocations.length + '件';
+
+      if (filtered.length === 0) {
+        list.innerHTML = '<div class="empty">該当する材料がありません</div>';
+        return;
+      }
+
+      list.innerHTML = filtered.map(function(item) {
+        const locationType = item['所在区分'] || '';
+        const quantity = Number(item['数量'] || 0);
+        const amount = Number(item['金額'] || 0);
+        const amountText = amount ? amount.toLocaleString('ja-JP') + '円' : '-';
+        const canOut = quantity > 0 && item['材料ID'] && locationType === '倉庫';
+
+        const firstDate = item['初回入庫日'] || '';
+        const lastDate = item['最終動作日'] || '';
+        const lastType = item['最終動作区分'] || '';
+        const lastQty = item['最終動作数量'] || '';
+        const lastUnit = item['最終動作単位'] || '';
+        const lastStaff = item['最終担当者'] || '';
+        const hasPartial = item['半端あり'] === 'あり';
+
+        let movementText = '';
+
+        if (firstDate && lastDate) {
+          movementText =
+            '初回 ' + firstDate +
+            '・最終 ' + lastDate +
+            (lastType ? ' ' + lastType : '') +
+            (lastQty ? String(lastQty) : '') +
+            (lastUnit ? String(lastUnit) : '') +
+            (lastStaff ? ' ' + lastStaff : '');
+        } else if (lastDate) {
+          movementText =
+            '最終 ' + lastDate +
+            (lastType ? ' ' + lastType : '') +
+            (lastQty ? String(lastQty) : '') +
+            (lastUnit ? String(lastUnit) : '') +
+            (lastStaff ? ' ' + lastStaff : '');
+        } else if (firstDate) {
+          movementText = '初回 ' + firstDate;
+        }
+
+        let html = '';
+
+        html += '<div class="list-row">';
+
+        html += '<div>';
+        html += '<div class="material-name">' + escapeHtml(item['材料名'] || '') + '</div>';
+        html += '<div class="small">' +
+          escapeHtml(item['カテゴリ'] || '') +
+          ' / ' +
+          escapeHtml(item['工番'] || '') +
+          ' ' +
+          escapeHtml(item['現場名'] || '') +
+          '</div>';
+
+        if (movementText) {
+          html += '<div class="small">' + escapeHtml(movementText) + '</div>';
+        }
+
+        if (hasPartial) {
+          html += '<div class="small">';
+          html += '<button class="partial-btn" onclick="openPartialList(\'' +
+            escapeAttr(item['材料ID'] || '') +
+            '\')">半端あり</button>';
+          html += '</div>';
+        }
+
+        html += '</div>';
+
+        html += '<div>';
+        html += '<span class="badge ' + getLocationClass(locationType) + '">';
+        html += escapeHtml(getLocationLabel(locationType));
+        html += '</span>';
+        html += '</div>';
+
+        html += '<div class="qty">';
+        html += '<span class="' + getQtyClass(quantity) + '">';
+        html += escapeHtml(quantity);
+        html += '</span>';
+        html += '</div>';
+
+        html += '<div class="unit">';
+        html += escapeHtml(item['単位'] || '');
+        html += '</div>';
+
+        html += '<div class="money ' + (amount ? '' : 'zero') + '">';
+        html += escapeHtml(amountText);
+        html += '</div>';
+
+        html += '<div>';
+        html += '<button class="out-btn" ' +
+          (canOut ? '' : 'disabled') +
+          ' onclick="openMaterialOut(\'' +
+          escapeAttr(item['元ID'] || item['材料ID'] || '') +
+          '\')">';
+        html += '出庫';
+        html += '</button>';
+        html += '</div>';
+
+        html += '</div>';
+
+        return html;
+      }).join('');
+    }
+
+    function openPartialList(materialId) {
+      if (!materialId) {
+        showMessage('材料IDがありません', true);
+        return;
+      }
+
+      showMessage('半端材料を取得中...', false);
+
+      google.script.run
+        .withSuccessHandler(function(json) {
+          let data = [];
+
+          try {
+            data = JSON.parse(json || '[]');
+          } catch (e) {
+            showMessage('半端材料データの読み込みに失敗しました', true);
+            return;
+          }
+
+          renderPartialList(materialId, data);
+        })
+        .withFailureHandler(function(error) {
+          showMessage(error.message || '半端材料の取得に失敗しました', true);
+        })
+        .getPartialMaterialsForWeb(materialId);
+    }
+
+    function renderPartialList(materialId, data) {
+      const box = document.getElementById('partialBox');
+      const title = document.getElementById('partialMaterialTitle');
+      const info = document.getElementById('partialMaterialInfo');
+      const list = document.getElementById('partialList');
+      const outBox = document.getElementById('partialOutBox');
+
+      selectedPartialItem = null;
+
+      if (outBox) {
+        outBox.classList.add('hidden');
+      }
+
+      const material = appData.materialLocations.find(function(row) {
+        return String(row['材料ID'] || '') === String(materialId || '');
+      }) || {};
+
+      const materialName = material['材料名'] || (data && data[0] ? data[0].materialName : '');
+
+      title.innerText = materialName || '半端材料';
+      info.innerText = '材料ID：' + materialId + ' / 件数：' + (data ? data.length : 0) + '件';
+
+      if (!data || data.length === 0) {
+        list.innerHTML = '<div class="empty">この材料の半端材料はありません</div>';
+        box.classList.remove('hidden');
+
+        box.scrollIntoView({
+          behavior: 'smooth',
+          block: 'start'
+        });
+
+        return;
+      }
+
+      window.currentPartialList = data;
+
+      list.innerHTML = data.map(function(item, index) {
+        let html = '';
+
+        html += '<div class="partial-card">';
+
+        html += '<div class="partial-card-title">';
+        html += (index + 1) + '. ';
+        html += escapeHtml(item.registeredAt || '') + ' / ';
+        html += escapeHtml(item.jobNo || '') + ' ';
+        html += escapeHtml(item.jobName || '');
+        html += '</div>';
+
+        html += '<div class="partial-card-qty">';
+        html += '半端 ' + escapeHtml(item.partialQuantity || '') + escapeHtml(item.partialUnit || '');
+        html += '</div>';
+
+        html += '<div class="partial-card-line">';
+        html += '状態：' + escapeHtml(item.status || '-') + ' / ';
+        html += '保管：' + escapeHtml(item.storageStatus || '-') + ' / ';
+        html += '担当：' + escapeHtml(item.staffName || '-');
+        html += '</div>';
+
+        if (item.memo) {
+          html += '<div class="partial-card-line">';
+          html += 'メモ：' + escapeHtml(item.memo);
+          html += '</div>';
+        }
+
+        html += '<button class="main-btn" onclick="openPartialOut(' + index + ')">';
+        html += 'この半端を使う';
+        html += '</button>';
+
+        html += '</div>';
+
+        return html;
+      }).join('');
+
+      box.classList.remove('hidden');
+
+      box.scrollIntoView({
+        behavior: 'smooth',
+        block: 'start'
+      });
+    }
+
+    function closePartialBox() {
+      document.getElementById('partialBox').classList.add('hidden');
+    }
+
+    function openPartialOut(index) {
+      const list = window.currentPartialList || [];
+      const item = list[index];
+
+      if (!item) {
+        showMessage('半端材料が見つかりません', true);
+        return;
+      }
+
+      selectedPartialItem = item;
+
+      document.getElementById('partialOutBox').classList.remove('hidden');
+
+      document.getElementById('partialOutTitle').innerText =
+        item.materialName || '半端材料';
+
+      document.getElementById('partialOutInfo').innerText =
+        '余剰材ID：' + (item.excessId || '') +
+        ' / 半端：' + (item.partialQuantity || '') + (item.partialUnit || '') +
+        ' / 元現場：' + (item.jobNo || '') + ' ' + (item.jobName || '');
+
+      document.getElementById('partialOutEmployeeSelect').value = '';
+      document.getElementById('partialOutJobKeyword').value = '';
+      document.getElementById('partialOutJobSelect').value = '';
+      document.getElementById('partialOutMemo').value = '';
+
+      renderPartialOutEmployeeOptions();
+      renderPartialOutJobOptions();
+
+      document.getElementById('partialOutBox').scrollIntoView({
+        behavior: 'smooth',
+        block: 'start'
+      });
+    }
+
+    function cancelPartialOut() {
+      selectedPartialItem = null;
+      document.getElementById('partialOutBox').classList.add('hidden');
+    }
+
+    function submitPartialOut() {
+      if (!selectedPartialItem) {
+        showMessage('半端材料を選択してください', true);
+        return;
+      }
+
+      const employeeId = document.getElementById('partialOutEmployeeSelect').value;
+      const jobNo = document.getElementById('partialOutJobSelect').value;
+
+      if (!employeeId) {
+        showMessage('社員を選択してください', true);
+        return;
+      }
+
+      if (!jobNo) {
+        showMessage('工番を選択してください', true);
+        return;
+      }
+
+      const employee = appData.employees.find(function(emp) {
+        return String(emp.employeeId) === String(employeeId);
+      }) || {};
+
+      const job = appData.jobs.find(function(j) {
+        return String(j.jobNo) === String(jobNo);
+      }) || {};
+
+      const payload = {
+        excessId: selectedPartialItem.excessId || '',
+        materialId: selectedPartialItem.materialId || '',
+        materialName: selectedPartialItem.materialName || '',
+        partialQuantity: selectedPartialItem.partialQuantity || 0,
+        partialUnit: selectedPartialItem.partialUnit || '',
+        employeeId: employee.employeeId || '',
+        employeeName: employee.employeeName || '',
+        jobNo: job.jobNo || '',
+        jobName: job.jobName || '',
+        memo: getValue('partialOutMemo')
+      };
+
+      document.getElementById('partialOutSubmitBtn').disabled = true;
+      document.getElementById('partialOutSubmitBtn').innerText = '半端出庫登録中...';
+
+      google.script.run
+        .withSuccessHandler(function(res) {
+          document.getElementById('partialOutSubmitBtn').disabled = false;
+          document.getElementById('partialOutSubmitBtn').innerText = 'この半端を出庫登録';
+
+          showMessage('半端出庫を登録しました：' + res.partialOutId, false);
+
+          selectedPartialItem = null;
+          document.getElementById('partialOutBox').classList.add('hidden');
+
+          loadAppData();
+
+          if (res && res.materialId) {
+            setTimeout(function() {
+              openPartialList(res.materialId);
+            }, 800);
+          }
+        })
+        .withFailureHandler(function(error) {
+          document.getElementById('partialOutSubmitBtn').disabled = false;
+          document.getElementById('partialOutSubmitBtn').innerText = 'この半端を出庫登録';
+
+          showMessage('半端出庫エラー：' + (error.message || error), true);
+        })
+        .registerPartialOut(payload);
+    }
+
+    function openMaterialOut(sourceId) {
+      const item = appData.materialLocations.find(function(row) {
+        return String(row['元ID'] || row['材料ID'] || '') === String(sourceId || '');
+      });
+
+      if (!item) {
+        showMessage('出庫対象の材料が見つかりません', true);
+        return;
+      }
+
+      selectedOutItem = item;
+
+      const quantity = Number(item['数量'] || 0);
+      const unitPrice = Number(item['単価'] || 0);
+      const amount = Number(item['金額'] || 0);
+
+      document.getElementById('outBox').classList.remove('hidden');
+
+      document.getElementById('outMaterialTitle').innerText = item['材料名'] || '';
+
+      document.getElementById('outMaterialInfo').innerText =
+        '所在：' + (item['所在区分'] || '') +
+        ' / 現在数量：' + quantity + (item['単位'] || '') +
+        ' / 在庫金額：' + formatYen(amount);
+
+      document.getElementById('outUnit').value = item['単位'] || '';
+      document.getElementById('outUnitPriceText').innerText = formatYen(unitPrice);
+      document.getElementById('outAmountText').innerText = '0円';
+      document.getElementById('outMemo').value = '';
+      document.getElementById('outEmployeeSelect').value = '';
+      document.getElementById('outJobKeyword').value = '';
+
+      renderOutJobOptions();
+      renderOutQuantityOptions(quantity);
+
+      document.getElementById('outBox').scrollIntoView({
+        behavior: 'smooth',
+        block: 'start'
+      });
+    }
+
+    function updateOutAmount() {
+      if (!selectedOutItem) {
+        document.getElementById('outAmountText').innerText = '0円';
+        return;
+      }
+
+      const qty = Number(document.getElementById('outQuantity').value || 0);
+      const unitPrice = Number(selectedOutItem['単価'] || 0);
+      const amount = qty * unitPrice;
+
+      document.getElementById('outUnitPriceText').innerText = formatYen(unitPrice);
+      document.getElementById('outAmountText').innerText = formatYen(amount);
+    }
+
+    function updateArrivalAmount() {
+      const quantity = Number(document.getElementById('arrivalQuantity').value || 0);
+      const unitPrice = Number(document.getElementById('arrivalUnitPrice').value || 0);
+      const amount = quantity * unitPrice;
+
+      document.getElementById('arrivalUnitPriceText').innerText = formatYen(unitPrice);
+      document.getElementById('arrivalAmountText').innerText = formatYen(amount);
+    }
+
+    function cancelMaterialOut() {
+      selectedOutItem = null;
+      document.getElementById('outBox').classList.add('hidden');
+    }
+
+    function submitMaterialOut() {
+      if (!selectedOutItem) {
+        showMessage('出庫対象を選択してください', true);
+        return;
+      }
+
+      const employeeId = document.getElementById('outEmployeeSelect').value;
+      const jobNo = document.getElementById('outJobSelect').value;
+      const quantity = Number(document.getElementById('outQuantity').value || 0);
+
+      if (!employeeId) {
+        showMessage('社員を選択してください', true);
+        return;
+      }
+
+      if (!jobNo) {
+        showMessage('工番を選択してください', true);
+        return;
+      }
+
+      if (!quantity || quantity <= 0) {
+        showMessage('出庫数量を選択してください', true);
+        return;
+      }
+
+      const currentQty = Number(selectedOutItem['数量'] || 0);
+
+      if (quantity > currentQty) {
+        showMessage('現在数量を超えて出庫できません', true);
+        return;
+      }
+
+      const employee = appData.employees.find(function(emp) {
+        return String(emp.employeeId) === String(employeeId);
+      }) || {};
+
+      const job = appData.jobs.find(function(j) {
+        return String(j.jobNo) === String(jobNo);
+      }) || {};
+
+      const payload = {
+        employeeId: employee.employeeId || '',
+        employeeName: employee.employeeName || '',
+        jobNo: job.jobNo || '',
+        jobName: job.jobName || '',
+        materialId: selectedOutItem['材料ID'] || '',
+        materialName: selectedOutItem['材料名'] || '',
+        category: selectedOutItem['カテゴリ'] || '',
+        locationType: selectedOutItem['所在区分'] || '',
+        sourceId: selectedOutItem['元ID'] || selectedOutItem['材料ID'] || '',
+        quantity: quantity,
+        unit: selectedOutItem['単位'] || '',
+        memo: getValue('outMemo')
+      };
+
+      document.getElementById('outSubmitBtn').disabled = true;
+      document.getElementById('outSubmitBtn').innerText = '出庫登録中...';
+
+      google.script.run
+        .withSuccessHandler(function(res) {
+          document.getElementById('outSubmitBtn').disabled = false;
+          document.getElementById('outSubmitBtn').innerText = '出庫登録';
+
+          const amountText = res && res.amountText ? res.amountText : '';
+          showMessage('出庫登録しました：' + res.outId + ' / 金額：' + amountText, false);
+
+          selectedOutItem = null;
+          document.getElementById('outBox').classList.add('hidden');
+
+          loadAppData();
+        })
+        .withFailureHandler(function(error) {
+          document.getElementById('outSubmitBtn').disabled = false;
+          document.getElementById('outSubmitBtn').innerText = '出庫登録';
+
+          showMessage('出庫登録エラー：' + (error.message || error), true);
+        })
+        .registerMaterialOut(payload);
+    }
+
+    function submitExcessMaterial() {
+      const employeeId = document.getElementById('exEmployeeSelect').value;
+      const jobNo = document.getElementById('exJobSelect').value;
+      const materialName = getValue('exMaterialName');
+      const quantity = Number(getValue('exQuantity') || 0);
+      const partialQuantity = getValue('exPartialQuantity');
+
+      if (!employeeId) {
+        showMessage('社員を選択してください', true);
+        return;
+      }
+
+      if (!jobNo) {
+        showMessage('工番を選択してください', true);
+        return;
+      }
+
+      if (!materialName) {
+        showMessage('材料名を入力してください', true);
+        return;
+      }
+
+      if (quantity <= 0 && !partialQuantity) {
+        showMessage('数量または半端数量を入力してください', true);
+        return;
+      }
+
+      const employee = appData.employees.find(function(emp) {
+        return String(emp.employeeId) === String(employeeId);
+      }) || {};
+
+      const job = appData.jobs.find(function(j) {
+        return String(j.jobNo) === String(jobNo);
+      }) || {};
+
+      const materialId = document.getElementById('exMaterialSelect').value;
+
+      const material = appData.materials.find(function(mat) {
+        return String(mat.materialId) === String(materialId);
+      }) || {};
+
+      const payload = {
+        jobNo: job.jobNo || '',
+        jobName: job.jobName || '',
+        employeeId: employee.employeeId || '',
+        employeeName: employee.employeeName || '',
+        materialId: material.materialId || '',
+        materialName: materialName,
+        category: material.category || selectedExcessCategory || '',
+        quantity: quantity,
+        unit: getValue('exUnit'),
+        partialQuantity: partialQuantity,
+        partialUnit: getValue('exPartialUnit'),
+        status: getValue('exStatus') || '未開封',
+        storageStatus: getValue('exStorageStatus'),
+        photoUrl: '',
+        memo: getValue('exMemo')
+      };
+
+      document.getElementById('exSubmitBtn').disabled = true;
+      document.getElementById('exSubmitBtn').innerText = '登録中...';
+
+      google.script.run
+        .withSuccessHandler(function(res) {
+          document.getElementById('exSubmitBtn').disabled = false;
+          document.getElementById('exSubmitBtn').innerText = '余り材を登録';
+
+          showMessage('余り材を登録しました：' + res.excessId, false);
+          clearExcessForm();
+
+          loadAppData();
+          showScreen('search', document.getElementById('tabSearch'));
+        })
+        .withFailureHandler(function(error) {
+          document.getElementById('exSubmitBtn').disabled = false;
+          document.getElementById('exSubmitBtn').innerText = '余り材を登録';
+
+          showMessage('登録エラー：' + (error.message || error), true);
+        })
+        .registerExcessMaterial(payload);
+    }
+
+    function submitArrival() {
+      const employeeId = document.getElementById('arrivalEmployeeSelect').value;
+      const materialId = document.getElementById('arrivalMaterialSelect').value;
+      const quantity = Number(document.getElementById('arrivalQuantity').value || 0);
+      const unitPrice = Number(document.getElementById('arrivalUnitPrice').value || 0);
+
+      if (!employeeId) {
+        showMessage('担当者を選択してください', true);
+        return;
+      }
+
+      if (!materialId) {
+        showMessage('材料を選択してください', true);
+        return;
+      }
+
+      if (!quantity || quantity <= 0) {
+        showMessage('入荷数量を選択してください', true);
+        return;
+      }
+
+      const employee = appData.employees.find(function(emp) {
+        return String(emp.employeeId) === String(employeeId);
+      }) || {};
+
+      const material = appData.materials.find(function(mat) {
+        return String(mat.materialId) === String(materialId);
+      }) || {};
+
+      const payload = {
+        arrivalDate: getValue('arrivalDate'),
+        orderId: getValue('arrivalOrderId'),
+        jobNo: '',
+        jobName: '',
+        materialId: material.materialId || '',
+        materialName: material.materialName || getValue('arrivalMaterialName'),
+        category: material.category || selectedArrivalCategory || '',
+        quantity: quantity,
+        unit: getValue('arrivalUnit') || material.unit || '',
+        unitPrice: unitPrice,
+        staffId: employee.employeeId || '',
+        staffName: employee.employeeName || '',
+        memo: getValue('arrivalMemo')
+      };
+
+      document.getElementById('arrivalSubmitBtn').disabled = true;
+      document.getElementById('arrivalSubmitBtn').innerText = '入荷登録中...';
+
+      google.script.run
+        .withSuccessHandler(function(res) {
+          document.getElementById('arrivalSubmitBtn').disabled = false;
+          document.getElementById('arrivalSubmitBtn').innerText = '入荷登録';
+
+          const amountText = res && res.amountText ? res.amountText : '';
+          showMessage('入荷登録しました：' + res.arrivalId + ' / 金額：' + amountText, false);
+
+          clearArrivalForm();
+
+          loadAppData();
+          showScreen('search', document.getElementById('tabSearch'));
+        })
+        .withFailureHandler(function(error) {
+          document.getElementById('arrivalSubmitBtn').disabled = false;
+          document.getElementById('arrivalSubmitBtn').innerText = '入荷登録';
+
+          showMessage('入荷登録エラー：' + (error.message || error), true);
+        })
+        .registerArrival(payload);
+    }
+
+    function clearExcessForm() {
+      [
+        'jobKeyword',
+        'exMaterialName',
+        'exUnit',
+        'exPartialUnit',
+        'exStorageStatus',
+        'exMemo'
+      ].forEach(function(id) {
+        document.getElementById(id).value = '';
+      });
+
+      document.getElementById('exEmployeeSelect').value = '';
+      document.getElementById('exJobSelect').value = '';
+      document.getElementById('exMaterialSelect').value = '';
+      document.getElementById('exQuantity').value = '';
+      document.getElementById('exPartialQuantity').value = '';
+      document.getElementById('exStatus').value = '未開封';
+
+      selectedExcessCategory = '';
+      renderExcessCategoryButtons();
+      renderExcessMaterialOptions();
+      renderJobOptions();
+    }
+
+    function clearArrivalForm() {
+      [
+        'arrivalMaterialName',
+        'arrivalUnit',
+        'arrivalUnitPrice',
+        'arrivalOrderId',
+        'arrivalMemo'
+      ].forEach(function(id) {
+        document.getElementById(id).value = '';
+      });
+
+      document.getElementById('arrivalEmployeeSelect').value = '';
+      document.getElementById('arrivalMaterialSelect').value = '';
+      document.getElementById('arrivalQuantity').value = '';
+
+      selectedArrivalCategory = '';
+      renderArrivalCategoryButtons();
+      renderArrivalMaterialOptions();
+      setTodayToArrivalDate();
+      updateArrivalAmount();
+    }
+
+    function setTodayToArrivalDate() {
+      const el = document.getElementById('arrivalDate');
+      if (!el) return;
+
+      const today = new Date();
+      const yyyy = today.getFullYear();
+      const mm = ('0' + (today.getMonth() + 1)).slice(-2);
+      const dd = ('0' + today.getDate()).slice(-2);
+
+      el.value = yyyy + '-' + mm + '-' + dd;
+    }
+
+    function getValue(id) {
+      return document.getElementById(id).value.trim();
+    }
+
+    function showMessage(text, isError) {
+      const el = document.getElementById('message');
+
+      el.innerText = text;
+      el.className = isError ? 'message error' : 'message';
+      el.style.display = 'block';
+
+      setTimeout(function() {
+        el.style.display = 'none';
+      }, 5000);
+    }
+
+    function formatYen(value) {
+      const num = Number(value || 0);
+      return num.toLocaleString('ja-JP') + '円';
+    }
+
+    function escapeHtml(value) {
+      return String(value || '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+    }
+
+    function escapeAttr(value) {
+      return escapeHtml(value).replace(/`/g, '&#096;');
+    }
+
+    function escapeJs(value) {
+      return String(value || '')
+        .replace(/\\/g, '\\\\')
+        .replace(/'/g, "\\'")
+        .replace(/\n/g, '\\n')
+        .replace(/\r/g, '');
+    }
+
+    // ==================================================
+    // 現場間移動
+    // ==================================================
+
+    let selectedMoveCategory = '';
+
+    function findEmployeeById(employeeId) {
+      return appData.employees.find(function(emp) {
+        return String(emp.employeeId) === String(employeeId);
+      }) || {};
+    }
+
+    function findJobByNo(jobNo) {
+      return appData.jobs.find(function(job) {
+        return String(job.jobNo) === String(jobNo);
+      }) || {};
+    }
+
+    function renderMoveEmployeeOptions() {
+      const select = document.getElementById('moveEmployeeSelect');
+
+      if (!select) return;
+
+      select.innerHTML =
+        '<option value="">担当者を選択</option>' +
+        appData.employees.map(function(emp) {
+          const label = emp.employeeId + '　' + emp.employeeName;
+          return '<option value="' + escapeAttr(emp.employeeId) + '">' + escapeHtml(label) + '</option>';
+        }).join('');
+    }
+
+    function renderJobSelectOptions(selectId, keywordId, placeholder) {
+      const select = document.getElementById(selectId);
+      const keywordEl = document.getElementById(keywordId);
+
+      if (!select || !keywordEl) return;
+
+      const keyword = keywordEl.value.trim().toLowerCase();
+
+      const filtered = appData.jobs.filter(function(job) {
+        const text = (job.jobNo + ' ' + job.jobName).toLowerCase();
+        return !keyword || text.indexOf(keyword) !== -1;
+      }).slice(0, 200);
+
+      select.innerHTML =
+        '<option value="">' + placeholder + '</option>' +
+        filtered.map(function(job) {
+          const label = job.jobNo + '　' + job.jobName;
+          return '<option value="' + escapeAttr(job.jobNo) + '">' + escapeHtml(label) + '</option>';
+        }).join('');
+    }
+
+    function renderMoveFromJobOptions() {
+      renderJobSelectOptions('moveFromJobSelect', 'moveFromJobKeyword', '移動元の工番を選択');
+    }
+
+    function renderMoveToJobOptions() {
+      renderJobSelectOptions('moveToJobSelect', 'moveToJobKeyword', '移動先の工番を選択');
+    }
+
+    function renderMoveCategoryButtons() {
+      const el = document.getElementById('moveCategoryButtons');
+
+      if (!el) return;
+
+      let html =
+        '<button class="category-btn ' +
+        (selectedMoveCategory === '' ? 'active' : '') +
+        '" onclick="setMoveCategory(\'\')">全部</button>';
+
+      appData.categories.forEach(function(cat) {
+        const active = selectedMoveCategory === cat.categoryName ? 'active' : '';
+
+        html +=
+          '<button class="category-btn ' +
+          active +
+          '" onclick="setMoveCategory(\'' +
+          escapeJs(cat.categoryName) +
+          '\')">' +
+          escapeHtml(cat.categoryName) +
+          '</button>';
+      });
+
+      el.innerHTML = html;
+    }
+
+    function setMoveCategory(categoryName) {
+      selectedMoveCategory = categoryName || '';
+      document.getElementById('moveMaterialSelect').value = '';
+      renderMoveCategoryButtons();
+      renderMoveMaterialOptions();
+    }
+
+    function renderMoveMaterialOptions() {
+      const select = document.getElementById('moveMaterialSelect');
+
+      if (!select) return;
+
+      const filtered = appData.materials.filter(function(mat) {
+        return !selectedMoveCategory || mat.category === selectedMoveCategory;
+      });
+
+      select.innerHTML =
+        '<option value="">材料を選択</option>' +
+        filtered.map(function(mat) {
+          const label = mat.materialName + ' / ' + (mat.unit || '') + ' / ' + (mat.category || '');
+          return '<option value="' + escapeAttr(mat.materialId) + '">' + escapeHtml(label) + '</option>';
+        }).join('');
+    }
+
+    function onMoveMaterialChange() {
+      const materialId = document.getElementById('moveMaterialSelect').value;
+
+      const material = appData.materials.find(function(mat) {
+        return String(mat.materialId) === String(materialId);
+      });
+
+      if (!material) return;
+
+      document.getElementById('moveUnit').value = material.unit || '';
+
+      selectedMoveCategory = material.category || selectedMoveCategory;
+      renderMoveCategoryButtons();
+    }
+
+    function renderMoveQuantityOptions() {
+      const select = document.getElementById('moveQuantity');
+
+      if (!select) return;
+
+      let html = '<option value="">移動数量</option>';
+
+      for (let i = 1; i <= 100; i++) {
+        html += '<option value="' + i + '">' + i + '</option>';
+      }
+
+      select.innerHTML = html;
+    }
+
+    function clearMoveForm() {
+      document.getElementById('moveEmployeeSelect').value = '';
+      document.getElementById('moveFromJobKeyword').value = '';
+      document.getElementById('moveFromJobSelect').value = '';
+      document.getElementById('moveToJobKeyword').value = '';
+      document.getElementById('moveToJobSelect').value = '';
+      document.getElementById('moveMaterialSelect').value = '';
+      document.getElementById('moveQuantity').value = '';
+      document.getElementById('moveUnit').value = '';
+      document.getElementById('moveMemo').value = '';
+
+      selectedMoveCategory = '';
+      renderMoveCategoryButtons();
+      renderMoveMaterialOptions();
+      renderMoveFromJobOptions();
+      renderMoveToJobOptions();
+    }
+
+    function submitMaterialMove() {
+      const employeeId = document.getElementById('moveEmployeeSelect').value;
+      const fromJobNo = document.getElementById('moveFromJobSelect').value;
+      const toJobNo = document.getElementById('moveToJobSelect').value;
+      const materialId = document.getElementById('moveMaterialSelect').value;
+      const quantity = Number(document.getElementById('moveQuantity').value || 0);
+
+      if (!employeeId) {
+        showMessage('担当者を選択してください', true);
+        return;
+      }
+
+      if (!fromJobNo) {
+        showMessage('移動元の工番を選択してください', true);
+        return;
+      }
+
+      if (!toJobNo) {
+        showMessage('移動先の工番を選択してください', true);
+        return;
+      }
+
+      if (fromJobNo === toJobNo) {
+        showMessage('移動元と移動先が同じです', true);
+        return;
+      }
+
+      if (!materialId) {
+        showMessage('材料を選択してください', true);
+        return;
+      }
+
+      if (!quantity || quantity <= 0) {
+        showMessage('移動数量を選択してください', true);
+        return;
+      }
+
+      const employee = findEmployeeById(employeeId);
+      const fromJob = findJobByNo(fromJobNo);
+      const toJob = findJobByNo(toJobNo);
+
+      const material = appData.materials.find(function(mat) {
+        return String(mat.materialId) === String(materialId);
+      }) || {};
+
+      const payload = {
+        materialId: material.materialId || '',
+        materialName: material.materialName || '',
+        quantity: quantity,
+        unit: material.unit || '',
+        fromType: '現場',
+        fromJobNo: fromJob.jobNo || '',
+        fromJobName: fromJob.jobName || '',
+        toType: '現場',
+        toJobNo: toJob.jobNo || '',
+        toJobName: toJob.jobName || '',
+        employeeId: employee.employeeId || '',
+        employeeName: employee.employeeName || '',
+        memo: getValue('moveMemo')
+      };
+
+      document.getElementById('moveSubmitBtn').disabled = true;
+      document.getElementById('moveSubmitBtn').innerText = '移動登録中...';
+
+      google.script.run
+        .withSuccessHandler(function(res) {
+          document.getElementById('moveSubmitBtn').disabled = false;
+          document.getElementById('moveSubmitBtn').innerText = '現場間移動を登録';
+
+          showMessage('現場間移動を登録しました：' + res.moveId, false);
+
+          clearMoveForm();
+          loadAppData();
+          showScreen('search', document.getElementById('tabSearch'));
+        })
+        .withFailureHandler(function(error) {
+          document.getElementById('moveSubmitBtn').disabled = false;
+          document.getElementById('moveSubmitBtn').innerText = '現場間移動を登録';
+
+          showMessage('移動登録エラー：' + (error.message || error), true);
+        })
+        .registerMaterialMove(payload);
+    }
+
+    // ==================================================
+    // 音声入力
+    // ==================================================
+
+    let voiceAnalysis = null;
+    let voiceMediaRecorder = null;
+    let voiceAudioChunks = [];
+
+    function renderVoiceEmployeeOptions() {
+      const select = document.getElementById('voiceEmployeeSelect');
+
+      if (!select) return;
+
+      select.innerHTML =
+        '<option value="">社員を選択</option>' +
+        appData.employees.map(function(emp) {
+          const label = emp.employeeId + '　' + emp.employeeName;
+          return '<option value="' + escapeAttr(emp.employeeId) + '">' + escapeHtml(label) + '</option>';
+        }).join('');
+    }
+
+    function renderVoiceJobOptions() {
+      renderJobSelectOptions('voiceJobSelect', 'voiceJobKeyword', '工番を選択（入荷は省略可）');
+    }
+
+    function renderVoiceFromJobOptions() {
+      renderJobSelectOptions('voiceFromJobSelect', 'voiceFromJobKeyword', '移動元の工番を選択');
+    }
+
+    function renderVoiceToJobOptions() {
+      renderJobSelectOptions('voiceToJobSelect', 'voiceToJobKeyword', '移動先の工番を選択');
+    }
+
+    function onVoiceActionTypeChange() {
+      const actionType = document.getElementById('voiceActionSelect').value;
+      const isMove = actionType === '現場間移動';
+
+      document.getElementById('voiceJobArea').classList.toggle('hidden', isMove);
+      document.getElementById('voiceMoveArea').classList.toggle('hidden', !isMove);
+    }
+
+    function resetVoiceRecButtons() {
+      const recBtn = document.getElementById('voiceRecBtn');
+      const stopBtn = document.getElementById('voiceRecStopBtn');
+
+      recBtn.disabled = false;
+      recBtn.innerText = '🎤 録音開始';
+      stopBtn.disabled = true;
+    }
+
+    function showVoiceKeyboardNote() {
+      const note = document.getElementById('voiceSupportNote');
+
+      note.innerText =
+        'この環境ではマイクが使えません。' +
+        'テキスト欄をタップして、キーボードのマイクボタン（音声入力）をご利用ください。';
+      note.classList.remove('hidden');
+    }
+
+    let voiceSpeechRec = null;
+
+    function startVoiceRecording() {
+      // 外部ホスティング版ではブラウザ標準の音声認識が使える（無料・即時）
+      const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
+
+      if (SpeechRec) {
+        startSpeechRecognition(SpeechRec);
+        return;
+      }
+
+      // 非対応ブラウザは録音→Gemini文字起こしへフォールバック
+      startAudioRecording();
+    }
+
+    function startSpeechRecognition(SpeechRec) {
+      voiceSpeechRec = new SpeechRec();
+      voiceSpeechRec.lang = 'ja-JP';
+      voiceSpeechRec.interimResults = false;
+      voiceSpeechRec.continuous = false;
+
+      voiceSpeechRec.onresult = function(event) {
+        const transcript = event.results[0][0].transcript;
+        const el = document.getElementById('voiceText');
+
+        el.value = (el.value ? el.value + ' ' : '') + transcript;
+      };
+
+      voiceSpeechRec.onerror = function(event) {
+        voiceSpeechRec = null;
+
+        if (event.error === 'not-allowed' || event.error === 'service-not-allowed') {
+          // 音声認識が使えない環境 → 録音→Gemini文字起こしを試す
+          resetVoiceRecButtons();
+          startAudioRecording();
+        } else if (event.error === 'no-speech') {
+          showMessage('音声が聞き取れませんでした。もう一度お試しください', true);
+          resetVoiceRecButtons();
+        } else {
+          showMessage('音声認識エラー：' + (event.error || ''), true);
+          resetVoiceRecButtons();
+        }
+      };
+
+      voiceSpeechRec.onend = function() {
+        voiceSpeechRec = null;
+        resetVoiceRecButtons();
+      };
+
+      const recBtn = document.getElementById('voiceRecBtn');
+      const stopBtn = document.getElementById('voiceRecStopBtn');
+
+      recBtn.disabled = true;
+      recBtn.innerText = '🔴 聞き取り中...';
+      stopBtn.disabled = false;
+
+      voiceSpeechRec.start();
+    }
+
+    function startAudioRecording() {
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia || !window.MediaRecorder) {
+        showVoiceKeyboardNote();
+        showMessage('このブラウザは録音に対応していません。キーボードの音声入力をご利用ください', true);
+        return;
+      }
+
+      navigator.mediaDevices.getUserMedia({ audio: true })
+        .then(function(stream) {
+          let mimeType = '';
+
+          const candidates = [
+            'audio/webm;codecs=opus',
+            'audio/webm',
+            'audio/mp4',
+            'audio/ogg;codecs=opus'
+          ];
+
+          for (let i = 0; i < candidates.length; i++) {
+            if (MediaRecorder.isTypeSupported && MediaRecorder.isTypeSupported(candidates[i])) {
+              mimeType = candidates[i];
+              break;
+            }
+          }
+
+          voiceMediaRecorder = mimeType
+            ? new MediaRecorder(stream, { mimeType: mimeType })
+            : new MediaRecorder(stream);
+
+          voiceAudioChunks = [];
+
+          voiceMediaRecorder.ondataavailable = function(event) {
+            if (event.data && event.data.size > 0) {
+              voiceAudioChunks.push(event.data);
+            }
+          };
+
+          voiceMediaRecorder.onstop = function() {
+            stream.getTracks().forEach(function(track) {
+              track.stop();
+            });
+
+            const blob = new Blob(voiceAudioChunks, {
+              type: voiceMediaRecorder.mimeType || mimeType || 'audio/webm'
+            });
+
+            sendVoiceAudio(blob);
+          };
+
+          voiceMediaRecorder.start();
+
+          const recBtn = document.getElementById('voiceRecBtn');
+          const stopBtn = document.getElementById('voiceRecStopBtn');
+
+          recBtn.disabled = true;
+          recBtn.innerText = '🔴 録音中...';
+          stopBtn.disabled = false;
+        })
+        .catch(function(err) {
+          if (err && (err.name === 'NotAllowedError' || err.name === 'SecurityError')) {
+            showVoiceKeyboardNote();
+            showMessage('マイクが許可されていません。キーボードの音声入力をご利用ください', true);
+          } else {
+            showMessage('録音エラー：' + (err && err.name || err), true);
+          }
+
+          resetVoiceRecButtons();
+        });
+    }
+
+    function stopVoiceRecording() {
+      // ブラウザ音声認識で聞き取り中の場合
+      if (voiceSpeechRec) {
+        voiceSpeechRec.stop();
+        return;
+      }
+
+      // 録音（Gemini文字起こし）の場合
+      if (voiceMediaRecorder && voiceMediaRecorder.state !== 'inactive') {
+        voiceMediaRecorder.stop();
+
+        const recBtn = document.getElementById('voiceRecBtn');
+        recBtn.innerText = '文字起こし中...';
+
+        document.getElementById('voiceRecStopBtn').disabled = true;
+        return;
+      }
+
+      resetVoiceRecButtons();
+    }
+
+    function sendVoiceAudio(blob) {
+      if (!blob || blob.size === 0) {
+        showMessage('録音データがありません', true);
+        resetVoiceRecButtons();
+        return;
+      }
+
+      if (blob.size > 4 * 1024 * 1024) {
+        showMessage('録音が長すぎます。短く話して再度お試しください', true);
+        resetVoiceRecButtons();
+        return;
+      }
+
+      const reader = new FileReader();
+
+      reader.onload = function() {
+        const base64 = String(reader.result).split(',')[1] || '';
+        const mimeType = String(blob.type || 'audio/webm').split(';')[0];
+
+        google.script.run
+          .withSuccessHandler(function(res) {
+            const el = document.getElementById('voiceText');
+
+            el.value = (el.value ? el.value + ' ' : '') + (res.text || '');
+
+            resetVoiceRecButtons();
+            showMessage('文字起こししました。内容を確認して「解析する」を押してください', false);
+          })
+          .withFailureHandler(function(error) {
+            resetVoiceRecButtons();
+            showMessage('文字起こしエラー：' + (error.message || error), true);
+          })
+          .transcribeVoiceAudio({
+            base64: base64,
+            mimeType: mimeType
+          });
+      };
+
+      reader.onerror = function() {
+        showMessage('録音データの読み込みに失敗しました', true);
+        resetVoiceRecButtons();
+      };
+
+      reader.readAsDataURL(blob);
+    }
+
+    function analyzeVoiceText() {
+      const text = getValue('voiceText');
+
+      if (!text) {
+        showMessage('音声テキストを入力してください', true);
+        return;
+      }
+
+      const employeeId = document.getElementById('voiceEmployeeSelect').value;
+      const employee = findEmployeeById(employeeId);
+      const jobNo = document.getElementById('voiceJobSelect').value;
+      const job = findJobByNo(jobNo);
+
+      const analyzeBtn = document.getElementById('voiceAnalyzeBtn');
+      analyzeBtn.disabled = true;
+      analyzeBtn.innerText = '解析中...';
+
+      google.script.run
+        .withSuccessHandler(function(res) {
+          analyzeBtn.disabled = false;
+          analyzeBtn.innerText = '解析する';
+
+          voiceAnalysis = res;
+
+          const parsed = res.parsed || {};
+          const match = res.match || {};
+
+          const actionSelect = document.getElementById('voiceActionSelect');
+
+          if (parsed.actionType) {
+            actionSelect.value = parsed.actionType;
+            onVoiceActionTypeChange();
+          }
+
+          document.getElementById('voiceQuantity').value = parsed.quantity || '';
+          document.getElementById('voiceUnit').value = parsed.unit || match.unit || '';
+
+          const resultBox = document.getElementById('voiceResultBox');
+          const resultTitle = document.getElementById('voiceResultTitle');
+          const resultInfo = document.getElementById('voiceResultInfo');
+          const registerBtn = document.getElementById('voiceRegisterBtn');
+          const tempArea = document.getElementById('voiceTempArea');
+
+          resultBox.classList.remove('hidden');
+          document.getElementById('voiceConfirmArea').classList.remove('hidden');
+
+          if (match.matched) {
+            resultTitle.innerText = '一致：' + (match.materialName || '');
+            resultInfo.innerText =
+              '材料ID：' + (match.materialId || '') +
+              ' / カテゴリ：' + (match.category || '-') +
+              ' / 単位：' + (match.unit || '-') +
+              ' / 一致方法：' + (match.matchType || '-') +
+              ' / 処理区分：' + (parsed.actionType || '未判定');
+
+            registerBtn.classList.remove('hidden');
+            tempArea.classList.add('hidden');
+          } else {
+            resultTitle.innerText = '未登録材料';
+            resultInfo.innerText =
+              '「' + (parsed.materialName || text) + '」は材料マスター・別名マスターに見つかりませんでした';
+
+            document.getElementById('voiceTempName').value = parsed.materialName || '';
+
+            registerBtn.classList.add('hidden');
+            tempArea.classList.remove('hidden');
+          }
+        })
+        .withFailureHandler(function(error) {
+          analyzeBtn.disabled = false;
+          analyzeBtn.innerText = '解析する';
+
+          showMessage('解析エラー：' + (error.message || error), true);
+        })
+        .analyzeVoiceMaterialInput({
+          text: text,
+          employeeId: employee.employeeId || '',
+          employeeName: employee.employeeName || '',
+          jobNo: job.jobNo || '',
+          jobName: job.jobName || ''
+        });
+    }
+
+    function resetVoiceForm() {
+      voiceAnalysis = null;
+
+      document.getElementById('voiceText').value = '';
+      document.getElementById('voiceActionSelect').value = '';
+      document.getElementById('voiceQuantity').value = '';
+      document.getElementById('voiceUnit').value = '';
+      document.getElementById('voiceTempName').value = '';
+      document.getElementById('voiceResultBox').classList.add('hidden');
+      document.getElementById('voiceConfirmArea').classList.add('hidden');
+      document.getElementById('voiceRegisterBtn').classList.add('hidden');
+      document.getElementById('voiceTempArea').classList.add('hidden');
+
+      onVoiceActionTypeChange();
+    }
+
+    function submitVoiceAction() {
+      if (!voiceAnalysis || !voiceAnalysis.match || !voiceAnalysis.match.matched) {
+        showMessage('先に解析して材料を確定してください', true);
+        return;
+      }
+
+      const match = voiceAnalysis.match;
+      const actionType = document.getElementById('voiceActionSelect').value;
+      const employeeId = document.getElementById('voiceEmployeeSelect').value;
+      const quantity = Number(document.getElementById('voiceQuantity').value || 0);
+
+      if (!actionType) {
+        showMessage('処理区分を選択してください', true);
+        return;
+      }
+
+      if (!employeeId) {
+        showMessage('社員を選択してください', true);
+        return;
+      }
+
+      if (!quantity || quantity <= 0) {
+        showMessage('数量を入力してください', true);
+        return;
+      }
+
+      const employee = findEmployeeById(employeeId);
+
+      const payload = {
+        actionType: actionType,
+        materialId: match.materialId || '',
+        materialName: match.materialName || '',
+        quantity: quantity,
+        unit: getValue('voiceUnit') || match.unit || '',
+        employeeId: employee.employeeId || '',
+        employeeName: employee.employeeName || '',
+        voiceText: getValue('voiceText'),
+        jobNo: '',
+        jobName: '',
+        fromJobNo: '',
+        fromJobName: '',
+        toJobNo: '',
+        toJobName: ''
+      };
+
+      if (actionType === '現場間移動') {
+        const fromJobNo = document.getElementById('voiceFromJobSelect').value;
+        const toJobNo = document.getElementById('voiceToJobSelect').value;
+
+        if (!fromJobNo) {
+          showMessage('移動元の工番を選択してください', true);
+          return;
+        }
+
+        if (!toJobNo) {
+          showMessage('移動先の工番を選択してください', true);
+          return;
+        }
+
+        if (fromJobNo === toJobNo) {
+          showMessage('移動元と移動先が同じです', true);
+          return;
+        }
+
+        const fromJob = findJobByNo(fromJobNo);
+        const toJob = findJobByNo(toJobNo);
+
+        payload.fromJobNo = fromJob.jobNo || '';
+        payload.fromJobName = fromJob.jobName || '';
+        payload.toJobNo = toJob.jobNo || '';
+        payload.toJobName = toJob.jobName || '';
+      } else {
+        const jobNo = document.getElementById('voiceJobSelect').value;
+
+        if (!jobNo && actionType !== '入荷') {
+          showMessage('工番を選択してください', true);
+          return;
+        }
+
+        const job = findJobByNo(jobNo);
+
+        payload.jobNo = job.jobNo || '';
+        payload.jobName = job.jobName || '';
+      }
+
+      const registerBtn = document.getElementById('voiceRegisterBtn');
+      registerBtn.disabled = true;
+      registerBtn.innerText = '登録中...';
+
+      google.script.run
+        .withSuccessHandler(function(res) {
+          registerBtn.disabled = false;
+          registerBtn.innerText = 'この内容で登録';
+
+          showMessage(res.actionType + 'を登録しました：' + res.resultId, false);
+
+          resetVoiceForm();
+          loadAppData();
+        })
+        .withFailureHandler(function(error) {
+          registerBtn.disabled = false;
+          registerBtn.innerText = 'この内容で登録';
+
+          showMessage('音声登録エラー：' + (error.message || error), true);
+        })
+        .registerVoiceMaterialAction(payload);
+    }
+
+    function submitVoiceTemporary() {
+      const temporaryName = getValue('voiceTempName');
+      const employeeId = document.getElementById('voiceEmployeeSelect').value;
+
+      if (!temporaryName) {
+        showMessage('仮材料名を入力してください', true);
+        return;
+      }
+
+      if (!employeeId) {
+        showMessage('社員を選択してください', true);
+        return;
+      }
+
+      const employee = findEmployeeById(employeeId);
+      const jobNo = document.getElementById('voiceJobSelect').value;
+      const job = findJobByNo(jobNo);
+
+      const parsed = (voiceAnalysis && voiceAnalysis.parsed) || {};
+
+      const payload = {
+        voiceText: getValue('voiceText'),
+        temporaryName: temporaryName,
+        categoryCandidate: '',
+        unitCandidate: getValue('voiceUnit') || parsed.unit || '',
+        quantity: Number(document.getElementById('voiceQuantity').value || 0),
+        employeeId: employee.employeeId || '',
+        employeeName: employee.employeeName || '',
+        jobNo: job.jobNo || '',
+        jobName: job.jobName || '',
+        actionType: document.getElementById('voiceActionSelect').value || parsed.actionType || '',
+        memo: ''
+      };
+
+      const tempBtn = document.getElementById('voiceTempBtn');
+      tempBtn.disabled = true;
+      tempBtn.innerText = '仮登録中...';
+
+      google.script.run
+        .withSuccessHandler(function(res) {
+          tempBtn.disabled = false;
+          tempBtn.innerText = '仮材料として登録';
+
+          showMessage('仮材料を登録しました：' + res.temporaryId, false);
+
+          resetVoiceForm();
+        })
+        .withFailureHandler(function(error) {
+          tempBtn.disabled = false;
+          tempBtn.innerText = '仮材料として登録';
+
+          showMessage('仮材料登録エラー：' + (error.message || error), true);
+        })
+        .registerTemporaryMaterialFromVoice(payload);
+    }
+
+    initApp();
+  </script>
+</body>
+</html>
