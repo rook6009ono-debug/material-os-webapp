@@ -2695,7 +2695,7 @@
         .withFailureHandler(function(error) {
           if (heardEl) heardEl.innerText = '解析エラー：' + (error.message || error);
         })
-        .parseVoiceInput({ text: text });
+        .analyzeVoiceMaterialInput({ text: text });
     }
 
     function setSelectByValue_(selectId, value) {
