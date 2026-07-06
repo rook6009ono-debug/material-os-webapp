@@ -525,6 +525,32 @@
     .field-wrap > textarea {
       flex: 1;
     }
+
+    /* 材料名の候補リスト（重複名・類似名の選択用） */
+    .suggest-list {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      margin: 6px 0 10px;
+    }
+
+    .suggest-item {
+      text-align: left;
+      border: 1px solid var(--line);
+      background: #fff;
+      border-radius: 9px;
+      padding: 10px 11px;
+      font-size: 14px;
+      cursor: pointer;
+    }
+
+    .suggest-item b {
+      color: var(--green-dark);
+    }
+
+    .suggest-item .small {
+      margin-top: 2px;
+    }
   </style>
 </head>
 
@@ -713,7 +739,8 @@
           <button id="exVoiceBtn" class="voice-bar-btn" onclick="voiceFillForm('excess', this)">
             🎤 音声で材料・数量を入れる
           </button>
-          <div id="exVoiceHeard" class="voice-heard"></div>
+          <div id="excessVoiceHeard" class="voice-heard"></div>
+          <div id="excessVoiceCandidates" class="suggest-list hidden"></div>
         </div>
 
         <select id="exEmployeeSelect">
@@ -737,9 +764,12 @@
         </select>
 
         <div class="field-wrap">
-          <input id="exMaterialName" placeholder="材料名 手入力・修正可">
+          <input id="exMaterialName" placeholder="材料名 手入力・修正可" autocomplete="off"
+                 oninput="renderExMaterialSuggest()">
           <button class="field-mic" onclick="dictateToField('exMaterialName', this)" title="音声で入力">🎤</button>
         </div>
+
+        <div id="exMaterialSuggest" class="suggest-list hidden"></div>
 
         <div class="row">
           <select id="exQuantity">
@@ -805,6 +835,7 @@
             🎤 音声で材料・数量を入れる
           </button>
           <div id="arrivalVoiceHeard" class="voice-heard"></div>
+          <div id="arrivalVoiceCandidates" class="suggest-list hidden"></div>
         </div>
 
         <input id="arrivalDate" type="date">
@@ -866,6 +897,7 @@
             🎤 音声で材料・数量を入れる
           </button>
           <div id="moveVoiceHeard" class="voice-heard"></div>
+          <div id="moveVoiceCandidates" class="suggest-list hidden"></div>
         </div>
 
         <select id="moveEmployeeSelect">
@@ -2218,6 +2250,11 @@
       renderExcessCategoryButtons();
       renderExcessMaterialOptions();
       renderJobOptions();
+
+      const suggestBox = document.getElementById('exMaterialSuggest');
+      suggestBox.innerHTML = '';
+      suggestBox.classList.add('hidden');
+      hideVoiceCandidates('excess');
     }
 
     function clearArrivalForm() {
@@ -2240,6 +2277,7 @@
       renderArrivalMaterialOptions();
       setTodayToArrivalDate();
       updateArrivalAmount();
+      hideVoiceCandidates('arrival');
     }
 
     function setTodayToArrivalDate() {
@@ -2428,6 +2466,7 @@
       renderMoveMaterialOptions();
       renderMoveFromJobOptions();
       renderMoveToJobOptions();
+      hideVoiceCandidates('move');
     }
 
     function submitMaterialMove() {
@@ -2564,7 +2603,9 @@
         const transcript = event.results[0][0].transcript;
         el.value = (el.value ? el.value.trim() + ' ' : '') + transcript;
 
-        if (typeof el.onchange === 'function') el.onchange();
+        // oninput/onchange属性のハンドラ（候補表示など）を発火させる
+        el.dispatchEvent(new Event('input', { bubbles: true }));
+        el.dispatchEvent(new Event('change', { bubbles: true }));
       };
 
       rec.onerror = function(event) {
@@ -2634,25 +2675,202 @@
       }
     }
 
+    // 材料マスターから名前の一致候補を探す（完全一致を先頭に、部分一致を後ろに）
+    function findMaterialCandidates(name) {
+      const text = String(name || '').trim().toLowerCase();
+
+      if (!text) return [];
+
+      const exact = [];
+      const partial = [];
+
+      appData.materials.forEach(function(mat) {
+        const matName = String(mat.materialName || '').toLowerCase();
+
+        if (!matName) return;
+
+        if (matName === text) {
+          exact.push(mat);
+        } else if (matName.indexOf(text) !== -1 || text.indexOf(matName) !== -1) {
+          partial.push(mat);
+        }
+      });
+
+      return exact.concat(partial).slice(0, 8);
+    }
+
+    function candidateLabel_(mat) {
+      return '<b>' + escapeHtml(mat.materialName || '') + '</b>' +
+        '<div class="small">' +
+        escapeHtml((mat.category || '-') + ' / 単位：' + (mat.unit || '-') +
+          ' / ' + (mat.materialId || '')) +
+        '</div>';
+    }
+
+    // ---- 手入力（余り材料の材料名欄）の候補表示 ----
+
+    function renderExMaterialSuggest() {
+      const box = document.getElementById('exMaterialSuggest');
+      const name = document.getElementById('exMaterialName').value.trim();
+      const candidates = findMaterialCandidates(name);
+
+      // 完全一致1件のみ（すでに確定状態）なら出さない
+      if (!candidates.length ||
+          (candidates.length === 1 && candidates[0].materialName === name &&
+           document.getElementById('exMaterialSelect').value === String(candidates[0].materialId))) {
+        box.innerHTML = '';
+        box.classList.add('hidden');
+        return;
+      }
+
+      box.innerHTML =
+        '<div class="small">マスターの候補（タップで選択）：</div>' +
+        candidates.map(function(mat, i) {
+          return '<button type="button" class="suggest-item" onclick="selectExcessSuggest(' + i + ')">' +
+            candidateLabel_(mat) + '</button>';
+        }).join('');
+
+      window.__exSuggest = candidates;
+      box.classList.remove('hidden');
+    }
+
+    function selectExcessSuggest(index) {
+      const candidates = window.__exSuggest || [];
+      const mat = candidates[index];
+
+      if (!mat) return;
+
+      setSelectByValue_('exMaterialSelect', mat.materialId);
+      onExcessMaterialChange();
+      document.getElementById('exMaterialName').value = mat.materialName || '';
+
+      const box = document.getElementById('exMaterialSuggest');
+      box.innerHTML = '';
+      box.classList.add('hidden');
+    }
+
+    // ---- 音声入力の候補表示（複数ヒット時に選ばせる） ----
+
+    let voiceCandidateState = null;
+
+    function hideVoiceCandidates(kind) {
+      const el = document.getElementById(kind + 'VoiceCandidates');
+
+      if (el) {
+        el.innerHTML = '';
+        el.classList.add('hidden');
+      }
+    }
+
+    function renderVoiceCandidates(kind, parsed, candidates) {
+      const el = document.getElementById(kind + 'VoiceCandidates');
+
+      if (!el) return;
+
+      voiceCandidateState = { kind: kind, parsed: parsed, candidates: candidates };
+
+      el.innerHTML = candidates.map(function(mat, i) {
+        return '<button type="button" class="suggest-item" onclick="chooseVoiceCandidate(' + i + ')">' +
+          candidateLabel_(mat) + '</button>';
+      }).join('');
+
+      el.classList.remove('hidden');
+    }
+
+    function chooseVoiceCandidate(index) {
+      const state = voiceCandidateState;
+
+      if (!state) return;
+
+      const mat = state.candidates[index];
+
+      if (!mat) return;
+
+      fillFormFields_(state.kind, state.parsed, {
+        matched: true,
+        materialId: mat.materialId,
+        materialName: mat.materialName,
+        category: mat.category,
+        unit: mat.unit,
+        unitPrice: mat.unitPrice
+      });
+
+      const heardEl = document.getElementById(state.kind + 'VoiceHeard');
+
+      if (heardEl) {
+        heardEl.innerText = '選択：' + mat.materialName +
+          (state.parsed.quantity
+            ? ' ' + state.parsed.quantity + (state.parsed.unit || mat.unit || '')
+            : '');
+      }
+
+      hideVoiceCandidates(state.kind);
+      voiceCandidateState = null;
+    }
+
     // 話した1文をサーバーで解析し、対象フォームの欄を埋める
+    // 材料名がマスターで複数ヒットした場合は候補を表示して選ばせる
     function applyVoiceToForm(kind, text, heardEl) {
+      hideVoiceCandidates(kind);
+
       google.script.run
         .withSuccessHandler(function(res) {
           const parsed = (res && res.parsed) || {};
           const match = (res && res.match) || {};
 
-          fillFormFields_(kind, parsed, match);
+          // クライアント側で名前一致の候補を収集し、サーバー照合（別名対応）も統合
+          let candidates = findMaterialCandidates(parsed.materialName);
+
+          if (match.matched) {
+            const exists = candidates.some(function(mat) {
+              return String(mat.materialId) === String(match.materialId);
+            });
+
+            if (!exists) {
+              candidates.unshift({
+                materialId: match.materialId,
+                materialName: match.materialName,
+                category: match.category,
+                unit: match.unit,
+                unitPrice: match.unitPrice
+              });
+            }
+          }
+
+          // 出庫フォームは材料確定済みなので数量のみ／候補選択は不要
+          if (kind === 'out' || candidates.length <= 1) {
+            const mat = candidates[0];
+            const chosen = mat
+              ? { matched: true, materialId: mat.materialId, materialName: mat.materialName,
+                  category: mat.category, unit: mat.unit, unitPrice: mat.unitPrice }
+              : { matched: false };
+
+            fillFormFields_(kind, parsed, kind === 'out' ? match : chosen);
+
+            if (heardEl) {
+              if (kind !== 'out' && chosen.matched) {
+                heardEl.innerText = '認識：' + text + ' → ' + chosen.materialName +
+                  (parsed.quantity ? ' ' + parsed.quantity + (parsed.unit || chosen.unit || '') : '');
+              } else if (kind === 'out') {
+                heardEl.innerText = '認識：' + text +
+                  (parsed.quantity ? ' → 数量 ' + parsed.quantity + (parsed.unit || '') : '');
+              } else if (parsed.materialName) {
+                heardEl.innerText = '認識：' + text +
+                  ' → 「' + parsed.materialName + '」は未登録。材料名欄に入れました（手入力・修正できます）';
+              } else {
+                heardEl.innerText = '認識：' + text + '（材料名が聞き取れませんでした）';
+              }
+            }
+            return;
+          }
+
+          // 複数候補 → 数量・単位だけ先に埋めて、材料はタップで選ばせる
+          fillFormFields_(kind, parsed, { matched: false });
+          renderVoiceCandidates(kind, parsed, candidates);
 
           if (heardEl) {
-            if (match.matched) {
-              heardEl.innerText = '認識：' + text + ' → ' + match.materialName +
-                (parsed.quantity ? ' ' + parsed.quantity + (parsed.unit || match.unit || '') : '');
-            } else if (parsed.materialName) {
-              heardEl.innerText = '認識：' + text +
-                ' → 「' + parsed.materialName + '」は未登録。材料名欄に入れました（手入力・修正できます）';
-            } else {
-              heardEl.innerText = '認識：' + text + '（材料名が聞き取れませんでした）';
-            }
+            heardEl.innerText = '認識：' + text +
+              ' → 候補が' + candidates.length + '件あります。タップして選んでください';
           }
         })
         .withFailureHandler(function(error) {
