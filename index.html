@@ -606,14 +606,13 @@
         </select>
 
         <input
-          id="outJobKeyword"
-          placeholder="工番・現場名で検索"
-          oninput="renderOutJobOptions()"
+          id="outJobSelect"
+          list="outJobData"
+          inputmode="numeric"
+          autocomplete="off"
+          placeholder="工番を入力（数字で絞込）"
         >
-
-        <select id="outJobSelect">
-          <option value="">工番を選択</option>
-        </select>
+        <datalist id="outJobData"></datalist>
 
         <div class="row">
           <select id="outQuantity" onchange="updateOutAmount()">
@@ -666,14 +665,13 @@
           </select>
 
           <input
-            id="partialOutJobKeyword"
-            placeholder="工番・現場名で検索"
-            oninput="renderPartialOutJobOptions()"
+            id="partialOutJobSelect"
+            list="partialOutJobData"
+            inputmode="numeric"
+            autocomplete="off"
+            placeholder="工番を入力（数字で絞込）"
           >
-
-          <select id="partialOutJobSelect">
-            <option value="">工番を選択</option>
-          </select>
+          <datalist id="partialOutJobData"></datalist>
 
           <textarea id="partialOutMemo" placeholder="備考"></textarea>
 
@@ -723,14 +721,13 @@
         </select>
 
         <input
-          id="jobKeyword"
-          placeholder="工番・現場名で検索"
-          oninput="renderJobOptions()"
+          id="exJobSelect"
+          list="exJobData"
+          inputmode="numeric"
+          autocomplete="off"
+          placeholder="工番を入力（数字で絞込）"
         >
-
-        <select id="exJobSelect">
-          <option value="">工番を選択</option>
-        </select>
+        <datalist id="exJobData"></datalist>
 
         <div class="sub-note">カテゴリ</div>
         <div id="excessCategoryButtons" class="category-row"></div>
@@ -878,26 +875,24 @@
         <div class="sub-note">移動元</div>
 
         <input
-          id="moveFromJobKeyword"
-          placeholder="移動元の工番・現場名で検索"
-          oninput="renderMoveFromJobOptions()"
+          id="moveFromJobSelect"
+          list="moveFromJobData"
+          inputmode="numeric"
+          autocomplete="off"
+          placeholder="移動元の工番を入力（数字で絞込）"
         >
-
-        <select id="moveFromJobSelect">
-          <option value="">移動元の工番を選択</option>
-        </select>
+        <datalist id="moveFromJobData"></datalist>
 
         <div class="sub-note">移動先</div>
 
         <input
-          id="moveToJobKeyword"
-          placeholder="移動先の工番・現場名で検索"
-          oninput="renderMoveToJobOptions()"
+          id="moveToJobSelect"
+          list="moveToJobData"
+          inputmode="numeric"
+          autocomplete="off"
+          placeholder="移動先の工番を入力（数字で絞込）"
         >
-
-        <select id="moveToJobSelect">
-          <option value="">移動先の工番を選択</option>
-        </select>
+        <datalist id="moveToJobData"></datalist>
 
         <div class="sub-note">カテゴリ</div>
         <div id="moveCategoryButtons" class="category-row"></div>
@@ -1270,59 +1265,27 @@
         }).join('');
     }
 
+    // 工番の候補リスト（datalist）を全工番で埋める。数字を打つとブラウザが自動で絞り込む
+    function fillJobDatalist(datalistId) {
+      const dl = document.getElementById(datalistId);
+      if (!dl) return;
+
+      dl.innerHTML = appData.jobs.map(function(job) {
+        return '<option value="' + escapeAttr(job.jobNo) + '">' +
+          escapeHtml(job.jobName) + '</option>';
+      }).join('');
+    }
+
     function renderJobOptions() {
-      const select = document.getElementById('exJobSelect');
-      const keyword = document.getElementById('jobKeyword').value.trim().toLowerCase();
-
-      const filtered = appData.jobs.filter(function(job) {
-        const text = (job.jobNo + ' ' + job.jobName).toLowerCase();
-        return !keyword || text.indexOf(keyword) !== -1;
-      }).slice(0, 200);
-
-      select.innerHTML =
-        '<option value="">工番を選択</option>' +
-        filtered.map(function(job) {
-          const label = job.jobNo + '　' + job.jobName;
-          return '<option value="' + escapeAttr(job.jobNo) + '">' + escapeHtml(label) + '</option>';
-        }).join('');
+      fillJobDatalist('exJobData');
     }
 
     function renderOutJobOptions() {
-      const select = document.getElementById('outJobSelect');
-      const keyword = document.getElementById('outJobKeyword').value.trim().toLowerCase();
-
-      const filtered = appData.jobs.filter(function(job) {
-        const text = (job.jobNo + ' ' + job.jobName).toLowerCase();
-        return !keyword || text.indexOf(keyword) !== -1;
-      }).slice(0, 200);
-
-      select.innerHTML =
-        '<option value="">工番を選択</option>' +
-        filtered.map(function(job) {
-          const label = job.jobNo + '　' + job.jobName;
-          return '<option value="' + escapeAttr(job.jobNo) + '">' + escapeHtml(label) + '</option>';
-        }).join('');
+      fillJobDatalist('outJobData');
     }
 
     function renderPartialOutJobOptions() {
-      const select = document.getElementById('partialOutJobSelect');
-      const keywordEl = document.getElementById('partialOutJobKeyword');
-
-      if (!select || !keywordEl) return;
-
-      const keyword = keywordEl.value.trim().toLowerCase();
-
-      const filtered = appData.jobs.filter(function(job) {
-        const text = (job.jobNo + ' ' + job.jobName).toLowerCase();
-        return !keyword || text.indexOf(keyword) !== -1;
-      }).slice(0, 200);
-
-      select.innerHTML =
-        '<option value="">工番を選択</option>' +
-        filtered.map(function(job) {
-          const label = job.jobNo + '　' + job.jobName;
-          return '<option value="' + escapeAttr(job.jobNo) + '">' + escapeHtml(label) + '</option>';
-        }).join('');
+      fillJobDatalist('partialOutJobData');
     }
 
     function renderQuantityOptions() {
@@ -1830,7 +1793,6 @@
         ' / 元現場：' + (item.jobNo || '') + ' ' + (item.jobName || '');
 
       document.getElementById('partialOutEmployeeSelect').value = '';
-      document.getElementById('partialOutJobKeyword').value = '';
       document.getElementById('partialOutJobSelect').value = '';
       document.getElementById('partialOutMemo').value = '';
 
@@ -1855,7 +1817,7 @@
       }
 
       const employeeId = document.getElementById('partialOutEmployeeSelect').value;
-      const jobNo = document.getElementById('partialOutJobSelect').value;
+      const jobNo = document.getElementById('partialOutJobSelect').value.trim();
 
       if (!employeeId) {
         showMessage('社員を選択してください', true);
@@ -1863,7 +1825,12 @@
       }
 
       if (!jobNo) {
-        showMessage('工番を選択してください', true);
+        showMessage('工番を入力してください', true);
+        return;
+      }
+
+      if (!findJobByNo(jobNo).jobNo) {
+        showMessage('その工番は見つかりません。数字を入力して候補から選んでください', true);
         return;
       }
 
@@ -1948,7 +1915,7 @@
       document.getElementById('outAmountText').innerText = '0円';
       document.getElementById('outMemo').value = '';
       document.getElementById('outEmployeeSelect').value = '';
-      document.getElementById('outJobKeyword').value = '';
+      document.getElementById('outJobSelect').value = '';
 
       renderOutJobOptions();
       renderOutQuantityOptions(quantity);
@@ -1994,7 +1961,7 @@
       }
 
       const employeeId = document.getElementById('outEmployeeSelect').value;
-      const jobNo = document.getElementById('outJobSelect').value;
+      const jobNo = document.getElementById('outJobSelect').value.trim();
       const quantity = Number(document.getElementById('outQuantity').value || 0);
 
       if (!employeeId) {
@@ -2003,7 +1970,12 @@
       }
 
       if (!jobNo) {
-        showMessage('工番を選択してください', true);
+        showMessage('工番を入力してください', true);
+        return;
+      }
+
+      if (!findJobByNo(jobNo).jobNo) {
+        showMessage('その工番は見つかりません。数字を入力して候補から選んでください', true);
         return;
       }
 
@@ -2069,7 +2041,7 @@
 
     function submitExcessMaterial() {
       const employeeId = document.getElementById('exEmployeeSelect').value;
-      const jobNo = document.getElementById('exJobSelect').value;
+      const jobNo = document.getElementById('exJobSelect').value.trim();
       const materialName = getValue('exMaterialName');
       const quantity = Number(getValue('exQuantity') || 0);
       const partialQuantity = getValue('exPartialQuantity');
@@ -2080,7 +2052,12 @@
       }
 
       if (!jobNo) {
-        showMessage('工番を選択してください', true);
+        showMessage('工番を入力してください', true);
+        return;
+      }
+
+      if (!findJobByNo(jobNo).jobNo) {
+        showMessage('その工番は見つかりません。数字を入力して候補から選んでください', true);
         return;
       }
 
@@ -2221,7 +2198,6 @@
 
     function clearExcessForm() {
       [
-        'jobKeyword',
         'exMaterialName',
         'exUnit',
         'exPartialUnit',
@@ -2351,33 +2327,12 @@
         }).join('');
     }
 
-    function renderJobSelectOptions(selectId, keywordId, placeholder) {
-      const select = document.getElementById(selectId);
-      const keywordEl = document.getElementById(keywordId);
-
-      if (!select || !keywordEl) return;
-
-      const keyword = keywordEl.value.trim().toLowerCase();
-
-      const filtered = appData.jobs.filter(function(job) {
-        const text = (job.jobNo + ' ' + job.jobName).toLowerCase();
-        return !keyword || text.indexOf(keyword) !== -1;
-      }).slice(0, 200);
-
-      select.innerHTML =
-        '<option value="">' + placeholder + '</option>' +
-        filtered.map(function(job) {
-          const label = job.jobNo + '　' + job.jobName;
-          return '<option value="' + escapeAttr(job.jobNo) + '">' + escapeHtml(label) + '</option>';
-        }).join('');
-    }
-
     function renderMoveFromJobOptions() {
-      renderJobSelectOptions('moveFromJobSelect', 'moveFromJobKeyword', '移動元の工番を選択');
+      fillJobDatalist('moveFromJobData');
     }
 
     function renderMoveToJobOptions() {
-      renderJobSelectOptions('moveToJobSelect', 'moveToJobKeyword', '移動先の工番を選択');
+      fillJobDatalist('moveToJobData');
     }
 
     function renderMoveCategoryButtons() {
@@ -2461,9 +2416,7 @@
 
     function clearMoveForm() {
       document.getElementById('moveEmployeeSelect').value = '';
-      document.getElementById('moveFromJobKeyword').value = '';
       document.getElementById('moveFromJobSelect').value = '';
-      document.getElementById('moveToJobKeyword').value = '';
       document.getElementById('moveToJobSelect').value = '';
       document.getElementById('moveMaterialSelect').value = '';
       document.getElementById('moveQuantity').value = '';
@@ -2479,8 +2432,8 @@
 
     function submitMaterialMove() {
       const employeeId = document.getElementById('moveEmployeeSelect').value;
-      const fromJobNo = document.getElementById('moveFromJobSelect').value;
-      const toJobNo = document.getElementById('moveToJobSelect').value;
+      const fromJobNo = document.getElementById('moveFromJobSelect').value.trim();
+      const toJobNo = document.getElementById('moveToJobSelect').value.trim();
       const materialId = document.getElementById('moveMaterialSelect').value;
       const quantity = Number(document.getElementById('moveQuantity').value || 0);
 
@@ -2490,12 +2443,22 @@
       }
 
       if (!fromJobNo) {
-        showMessage('移動元の工番を選択してください', true);
+        showMessage('移動元の工番を入力してください', true);
+        return;
+      }
+
+      if (!findJobByNo(fromJobNo).jobNo) {
+        showMessage('移動元の工番が見つかりません。数字を入力して候補から選んでください', true);
         return;
       }
 
       if (!toJobNo) {
-        showMessage('移動先の工番を選択してください', true);
+        showMessage('移動先の工番を入力してください', true);
+        return;
+      }
+
+      if (!findJobByNo(toJobNo).jobNo) {
+        showMessage('移動先の工番が見つかりません。数字を入力して候補から選んでください', true);
         return;
       }
 
