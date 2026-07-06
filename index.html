@@ -1030,7 +1030,7 @@
 
     // デプロイ後にAPIのURL（https://script.google.com/macros/s/…/exec）を
     // 入れておくと、ログイン画面のURL入力欄が非表示になります
-    const DEFAULT_API_URL = 'https://script.google.com/macros/s/AKfycbzfhxnk-FdMMEs_42KNug1Vog92WBK2bAEZ7u4yYM0ldpsmU6i2_tgZxOKOqDX2vdLY/exec';
+    const DEFAULT_API_URL = 'https://script.google.com/macros/s/AKfycbwJqhLWGyfDlnDC5R3K1-siNR_vdajJS7TdybetqOlBXn57EufY6_NYoiRUUsDUobrR1w/exec';
 
     let SESSION = null;
 
@@ -1212,6 +1212,13 @@
 
     function initApp() {
       loadSession();
+
+      // APIのURLが更新された場合、保存済みセッションも自動で新URLへ切り替える
+      if (DEFAULT_API_URL && SESSION && SESSION.apiUrl && SESSION.apiUrl !== DEFAULT_API_URL) {
+        SESSION.apiUrl = DEFAULT_API_URL;
+        SESSION.role = '';
+        saveSession();
+      }
 
       if (SESSION && SESSION.apiUrl && SESSION.apiKey && SESSION.companyCode) {
         showApp();
