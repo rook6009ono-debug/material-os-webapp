@@ -586,6 +586,7 @@
       <button id="tabExcess" class="tab" onclick="showScreen('excess', this)">余り材料</button>
       <button id="tabOrder" class="tab" onclick="showScreen('order', this)">注文・入荷</button>
       <button id="tabMove" class="tab" onclick="showScreen('move', this)">現場間移動</button>
+      <button id="tabMaster" class="tab" onclick="showScreen('master', this)">材料登録</button>
     </div>
 
     <div id="message" class="message"></div>
@@ -950,6 +951,62 @@
       </div>
     </section>
 
+    <!-- 材料登録（仮材料の正式登録・マスター新規登録） -->
+    <section id="screenMaster" class="hidden">
+      <div class="box">
+        <span class="box-title">仮材料（未確認）</span>
+        <div class="sub-note">
+          音声・手入力で仮登録された材料です。内容を確認して、下のフォームからマスターへ正式登録してください。
+        </div>
+
+        <div id="tempMaterialList"></div>
+
+        <button class="cancel-btn" onclick="loadTemporaryMaterials()">一覧を再読み込み</button>
+      </div>
+
+      <div class="box">
+        <span class="box-title">材料マスターへ登録</span>
+
+        <div id="masterTempInfo" class="out-summary hidden">
+          <div id="masterTempInfoText" class="out-material-title"></div>
+          <div class="small">登録すると、この仮材料は「正式登録済」になります</div>
+        </div>
+
+        <div class="field-wrap">
+          <input id="masterName" placeholder="材料名（必須）" autocomplete="off">
+          <button class="field-mic" onclick="dictateToField('masterName', this)" title="音声で入力">🎤</button>
+        </div>
+
+        <div class="row">
+          <select id="masterCategorySelect">
+            <option value="">カテゴリを選択</option>
+          </select>
+
+          <div class="field-wrap">
+            <input id="masterUnit" placeholder="単位 例：本・缶・個">
+            <button class="field-mic" onclick="dictateToField('masterUnit', this)" title="音声で入力">🎤</button>
+          </div>
+        </div>
+
+        <div class="row">
+          <input id="masterUnitPrice" type="number" placeholder="単価（円）任意">
+          <input id="masterMinStock" type="number" placeholder="最低在庫 任意">
+        </div>
+
+        <select id="masterApproverSelect">
+          <option value="">承認者を選択（任意）</option>
+        </select>
+
+        <div class="field-wrap">
+          <textarea id="masterMemo" placeholder="備考"></textarea>
+          <button class="field-mic" onclick="dictateToField('masterMemo', this)" title="音声で入力">🎤</button>
+        </div>
+
+        <button id="masterSubmitBtn" class="main-btn" onclick="submitMasterMaterial()">マスターへ登録</button>
+        <button class="cancel-btn" onclick="clearMasterForm()">フォームをクリア</button>
+      </div>
+    </section>
+
   </div>
 
   <script>
@@ -1128,7 +1185,7 @@
       document.getElementById('appTabs').classList.add('hidden');
       document.getElementById('logoutLink').classList.add('hidden');
 
-      ['screenSearch', 'screenExcess', 'screenOrder', 'screenMove']
+      ['screenSearch', 'screenExcess', 'screenOrder', 'screenMove', 'screenMaster']
         .forEach(function(id) {
           document.getElementById(id).classList.add('hidden');
         });
@@ -1159,6 +1216,7 @@
       document.getElementById('screenExcess').classList.add('hidden');
       document.getElementById('screenOrder').classList.add('hidden');
       document.getElementById('screenMove').classList.add('hidden');
+      document.getElementById('screenMaster').classList.add('hidden');
 
       document.querySelectorAll('.tab').forEach(function(tab) {
         tab.classList.remove('active');
@@ -1186,6 +1244,12 @@
 
       if (screen === 'move') {
         document.getElementById('screenMove').classList.remove('hidden');
+        return;
+      }
+
+      if (screen === 'master') {
+        document.getElementById('screenMaster').classList.remove('hidden');
+        loadTemporaryMaterials();
         return;
       }
     }
@@ -1249,6 +1313,9 @@
       renderMoveCategoryButtons();
       renderMoveMaterialOptions();
       renderMoveQuantityOptions();
+
+      renderMasterCategoryOptions();
+      renderMasterApproverOptions();
     }
 
     function renderEmployeeOptions() {
@@ -2721,14 +2788,32 @@
     function renderExMaterialSuggest() {
       const box = document.getElementById('exMaterialSuggest');
       const name = document.getElementById('exMaterialName').value.trim();
+
+      if (!name) {
+        box.innerHTML = '';
+        box.classList.add('hidden');
+        return;
+      }
+
       const candidates = findMaterialCandidates(name);
 
       // 完全一致1件のみ（すでに確定状態）なら出さない
-      if (!candidates.length ||
-          (candidates.length === 1 && candidates[0].materialName === name &&
-           document.getElementById('exMaterialSelect').value === String(candidates[0].materialId))) {
+      if (candidates.length === 1 && candidates[0].materialName === name &&
+          document.getElementById('exMaterialSelect').value === String(candidates[0].materialId)) {
         box.innerHTML = '';
         box.classList.add('hidden');
+        return;
+      }
+
+      // 候補ゼロ → 仮材料台帳への仮登録を提案
+      if (!candidates.length) {
+        box.innerHTML =
+          '<div class="small">マスターに候補がありません</div>' +
+          '<button type="button" class="suggest-item" onclick="registerTempFromExcessInput()">' +
+          '<b>「' + escapeHtml(name) + '」を仮材料として登録</b>' +
+          '<div class="small">単位・カテゴリは入力中の値を使用。後で材料登録タブから正式登録できます</div>' +
+          '</button>';
+        box.classList.remove('hidden');
         return;
       }
 
@@ -2865,10 +2950,15 @@
                   (parsed.quantity ? ' → 数量 ' + parsed.quantity + (parsed.unit || '') : '');
               } else if (parsed.materialName) {
                 heardEl.innerText = '認識：' + text +
-                  ' → 「' + parsed.materialName + '」は未登録。材料名欄に入れました（手入力・修正できます）';
+                  ' → 「' + parsed.materialName + '」はマスターにありません';
               } else {
                 heardEl.innerText = '認識：' + text + '（材料名が聞き取れませんでした）';
               }
+            }
+
+            // 候補ゼロ → 仮材料台帳への仮登録を提案
+            if (kind !== 'out' && !chosen.matched && parsed.materialName) {
+              renderVoiceTempOffer(kind, parsed, text);
             }
             return;
           }
@@ -2886,6 +2976,318 @@
           if (heardEl) heardEl.innerText = '解析エラー：' + (error.message || error);
         })
         .analyzeVoiceMaterialInput({ text: text });
+    }
+
+    // ==================================================
+    // 仮材料の仮登録（候補ゼロの材料を仮材料台帳へ）
+    // ==================================================
+
+    let voiceTempState = null;
+
+    // 各フォームの入力状態（社員・工番・カテゴリ・単位）をまとめて取る
+    function formContextFor_(kind) {
+      if (kind === 'excess') {
+        const employee = findEmployeeById(document.getElementById('exEmployeeSelect').value);
+        const job = findJobByNo(document.getElementById('exJobSelect').value.trim());
+
+        return {
+          category: selectedExcessCategory || '',
+          unit: getValue('exUnit'),
+          employeeId: employee.employeeId || '',
+          employeeName: employee.employeeName || '',
+          jobNo: job.jobNo || '',
+          jobName: job.jobName || '',
+          actionType: '余り戻し'
+        };
+      }
+
+      if (kind === 'arrival') {
+        const employee = findEmployeeById(document.getElementById('arrivalEmployeeSelect').value);
+
+        return {
+          category: selectedArrivalCategory || '',
+          unit: getValue('arrivalUnit'),
+          employeeId: employee.employeeId || '',
+          employeeName: employee.employeeName || '',
+          jobNo: '',
+          jobName: '',
+          actionType: '入荷'
+        };
+      }
+
+      if (kind === 'move') {
+        const employee = findEmployeeById(document.getElementById('moveEmployeeSelect').value);
+        const job = findJobByNo(document.getElementById('moveFromJobSelect').value.trim());
+
+        return {
+          category: selectedMoveCategory || '',
+          unit: getValue('moveUnit'),
+          employeeId: employee.employeeId || '',
+          employeeName: employee.employeeName || '',
+          jobNo: job.jobNo || '',
+          jobName: job.jobName || '',
+          actionType: '現場間移動'
+        };
+      }
+
+      return {
+        category: '', unit: '', employeeId: '', employeeName: '',
+        jobNo: '', jobName: '', actionType: ''
+      };
+    }
+
+    function sendTempRegistration_(payload, onDone) {
+      google.script.run
+        .withSuccessHandler(function(res) {
+          showMessage(
+            '仮材料として登録しました：' + res.temporaryId +
+            '（材料登録タブから正式登録できます）',
+            false
+          );
+
+          if (onDone) onDone(res);
+        })
+        .withFailureHandler(function(error) {
+          showMessage('仮登録エラー：' + (error.message || error), true);
+        })
+        .registerTemporaryMaterialFromVoice(payload);
+    }
+
+    // 音声で候補ゼロだった時の仮登録ボタンを表示
+    function renderVoiceTempOffer(kind, parsed, text) {
+      const el = document.getElementById(kind + 'VoiceCandidates');
+
+      if (!el) return;
+
+      voiceTempState = { kind: kind, parsed: parsed, text: text };
+
+      el.innerHTML =
+        '<button type="button" class="suggest-item" onclick="registerTempFromVoice()">' +
+        '<b>「' + escapeHtml(parsed.materialName) + '」を仮材料として登録</b>' +
+        '<div class="small">' +
+        escapeHtml('単位候補：' + (parsed.unit || '-') + '。後で材料登録タブから正式登録できます') +
+        '</div></button>';
+
+      el.classList.remove('hidden');
+    }
+
+    function registerTempFromVoice() {
+      const state = voiceTempState;
+
+      if (!state) return;
+
+      const context = formContextFor_(state.kind);
+
+      sendTempRegistration_({
+        voiceText: state.text,
+        temporaryName: state.parsed.materialName,
+        categoryCandidate: context.category,
+        unitCandidate: state.parsed.unit || context.unit,
+        quantity: state.parsed.quantity || 0,
+        employeeId: context.employeeId,
+        employeeName: context.employeeName,
+        jobNo: context.jobNo,
+        jobName: context.jobName,
+        actionType: context.actionType,
+        memo: '音声から仮登録'
+      }, function() {
+        hideVoiceCandidates(state.kind);
+        voiceTempState = null;
+      });
+    }
+
+    // 手入力（余り材料の材料名欄）で候補ゼロだった時の仮登録
+    function registerTempFromExcessInput() {
+      const name = getValue('exMaterialName');
+
+      if (!name) {
+        showMessage('材料名を入力してください', true);
+        return;
+      }
+
+      const context = formContextFor_('excess');
+
+      sendTempRegistration_({
+        voiceText: '手入力',
+        temporaryName: name,
+        categoryCandidate: context.category,
+        unitCandidate: context.unit,
+        quantity: Number(getValue('exQuantity') || 0),
+        employeeId: context.employeeId,
+        employeeName: context.employeeName,
+        jobNo: context.jobNo,
+        jobName: context.jobName,
+        actionType: '余り戻し',
+        memo: '手入力から仮登録'
+      }, function() {
+        const box = document.getElementById('exMaterialSuggest');
+        box.innerHTML = '';
+        box.classList.add('hidden');
+      });
+    }
+
+    // ==================================================
+    // 材料登録タブ（仮材料の正式登録・マスター新規登録）
+    // ==================================================
+
+    let masterTempId = '';
+
+    function renderMasterCategoryOptions() {
+      const select = document.getElementById('masterCategorySelect');
+
+      if (!select) return;
+
+      select.innerHTML =
+        '<option value="">カテゴリを選択</option>' +
+        appData.categories.map(function(cat) {
+          return '<option value="' + escapeAttr(cat.categoryName) + '">' +
+            escapeHtml(cat.categoryName) + '</option>';
+        }).join('');
+    }
+
+    function renderMasterApproverOptions() {
+      const select = document.getElementById('masterApproverSelect');
+
+      if (!select) return;
+
+      select.innerHTML =
+        '<option value="">承認者を選択（任意）</option>' +
+        appData.employees.map(function(emp) {
+          const label = emp.employeeId + '　' + emp.employeeName;
+          return '<option value="' + escapeAttr(emp.employeeId) + '">' + escapeHtml(label) + '</option>';
+        }).join('');
+    }
+
+    function loadTemporaryMaterials() {
+      const list = document.getElementById('tempMaterialList');
+
+      list.innerHTML = '<div class="status">読み込み中...</div>';
+
+      google.script.run
+        .withSuccessHandler(function(data) {
+          window.__tempList = data || [];
+
+          if (!data || !data.length) {
+            list.innerHTML = '<div class="empty">未確認の仮材料はありません</div>';
+            return;
+          }
+
+          list.innerHTML = data.map(function(item, index) {
+            let html = '';
+
+            html += '<div class="partial-card">';
+            html += '<div class="partial-card-title">' +
+              escapeHtml(item.temporaryName || '') +
+              '　<span class="badge badge-location-default">' +
+              escapeHtml(item.categoryCandidate || 'カテゴリ未定') +
+              '</span></div>';
+            html += '<div class="partial-card-line">' +
+              escapeHtml('単位候補：' + (item.unitCandidate || '-') +
+                ' / 数量：' + (item.quantity || '-') +
+                ' / ' + (item.registeredAt || '')) +
+              '</div>';
+            html += '<div class="partial-card-line">' +
+              escapeHtml('入力者：' + (item.employeeName || '-') +
+                ' / 現場：' + (item.jobName || '-')) +
+              '</div>';
+
+            if (item.voiceText) {
+              html += '<div class="partial-card-line">' +
+                escapeHtml('元テキスト：' + item.voiceText) + '</div>';
+            }
+
+            html += '<button class="main-btn" onclick="pickTemporaryMaterial(' + index + ')">この内容で登録フォームへ</button>';
+            html += '</div>';
+
+            return html;
+          }).join('');
+        })
+        .withFailureHandler(function(error) {
+          list.innerHTML = '<div class="empty">読み込みエラー：' +
+            escapeHtml(error.message || String(error)) + '</div>';
+        })
+        .getTemporaryMaterials({});
+    }
+
+    function pickTemporaryMaterial(index) {
+      const item = (window.__tempList || [])[index];
+
+      if (!item) return;
+
+      masterTempId = item.temporaryId || '';
+
+      document.getElementById('masterName').value = item.temporaryName || '';
+      document.getElementById('masterUnit').value = item.unitCandidate || '';
+      setSelectByValue_('masterCategorySelect', item.categoryCandidate || '');
+      document.getElementById('masterMemo').value =
+        item.voiceText && item.voiceText !== '手入力' ? '音声：' + item.voiceText : '';
+
+      document.getElementById('masterTempInfoText').innerText =
+        '仮材料 ' + masterTempId + ' を正式登録します';
+      document.getElementById('masterTempInfo').classList.remove('hidden');
+
+      document.getElementById('masterName').scrollIntoView({
+        behavior: 'smooth',
+        block: 'center'
+      });
+    }
+
+    function clearMasterForm() {
+      masterTempId = '';
+
+      ['masterName', 'masterUnit', 'masterUnitPrice', 'masterMinStock', 'masterMemo']
+        .forEach(function(id) {
+          document.getElementById(id).value = '';
+        });
+
+      document.getElementById('masterCategorySelect').value = '';
+      document.getElementById('masterApproverSelect').value = '';
+      document.getElementById('masterTempInfo').classList.add('hidden');
+    }
+
+    function submitMasterMaterial() {
+      const materialName = getValue('masterName');
+
+      if (!materialName) {
+        showMessage('材料名を入力してください', true);
+        return;
+      }
+
+      const approver = findEmployeeById(document.getElementById('masterApproverSelect').value);
+
+      const payload = {
+        materialName: materialName,
+        category: document.getElementById('masterCategorySelect').value,
+        unit: getValue('masterUnit'),
+        unitPrice: Number(document.getElementById('masterUnitPrice').value || 0),
+        minStock: Number(document.getElementById('masterMinStock').value || 0),
+        memo: getValue('masterMemo'),
+        temporaryId: masterTempId,
+        approverName: approver.employeeName || ''
+      };
+
+      const btn = document.getElementById('masterSubmitBtn');
+      btn.disabled = true;
+      btn.innerText = 'マスター登録中...';
+
+      google.script.run
+        .withSuccessHandler(function(res) {
+          btn.disabled = false;
+          btn.innerText = 'マスターへ登録';
+
+          showMessage('マスターへ登録しました：' + res.materialId + '　' + res.materialName, false);
+
+          clearMasterForm();
+          loadTemporaryMaterials();
+          loadAppData();
+        })
+        .withFailureHandler(function(error) {
+          btn.disabled = false;
+          btn.innerText = 'マスターへ登録';
+
+          showMessage('マスター登録エラー：' + (error.message || error), true);
+        })
+        .registerMasterMaterial(payload);
     }
 
     function setSelectByValue_(selectId, value) {
