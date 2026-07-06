@@ -641,6 +641,10 @@
         >
         <datalist id="outJobData"></datalist>
 
+        <select id="outUsageCompany">
+          <option value="">使用会社を選択</option>
+        </select>
+
         <div class="row">
           <select id="outQuantity" onchange="updateOutAmount()">
             <option value="">出庫数量</option>
@@ -926,6 +930,10 @@
           placeholder="移動先の工番を入力（数字で絞込）"
         >
         <datalist id="moveToJobData"></datalist>
+
+        <select id="moveUsageCompany">
+          <option value="">使用会社を選択</option>
+        </select>
 
         <div class="sub-note">カテゴリ</div>
         <div id="moveCategoryButtons" class="category-row"></div>
@@ -1305,6 +1313,7 @@
           appData.jobs = appData.jobs || [];
           appData.categories = appData.categories || [];
           appData.materials = appData.materials || [];
+          appData.usageCompanies = appData.usageCompanies || [];
           appData.materialLocations = appData.materialLocations || [];
 
           setupInitialOptions();
@@ -1351,6 +1360,23 @@
 
       renderMasterCategoryOptions();
       renderMasterApproverOptions();
+
+      renderUsageCompanyOptions();
+    }
+
+    // 使用会社の選択肢（出庫・現場間移動の両方に反映）
+    function renderUsageCompanyOptions() {
+      const optionsHtml =
+        '<option value="">使用会社を選択</option>' +
+        appData.usageCompanies.map(function(company) {
+          return '<option value="' + escapeAttr(company.companyName) + '">' +
+            escapeHtml(company.companyName) + '</option>';
+        }).join('');
+
+      ['outUsageCompany', 'moveUsageCompany'].forEach(function(id) {
+        const select = document.getElementById(id);
+        if (select) select.innerHTML = optionsHtml;
+      });
     }
 
     function renderEmployeeOptions() {
@@ -2050,6 +2076,7 @@
       document.getElementById('outMemo').value = '';
       document.getElementById('outEmployeeSelect').value = '';
       document.getElementById('outJobSelect').value = '';
+      document.getElementById('outUsageCompany').value = '';
 
       renderOutJobOptions();
       renderOutQuantityOptions(quantity);
@@ -2145,6 +2172,7 @@
         sourceId: selectedOutItem['元ID'] || selectedOutItem['材料ID'] || '',
         quantity: quantity,
         unit: selectedOutItem['単位'] || '',
+        usageCompany: document.getElementById('outUsageCompany').value,
         memo: getValue('outMemo')
       };
 
@@ -2558,6 +2586,7 @@
       document.getElementById('moveEmployeeSelect').value = '';
       document.getElementById('moveFromJobSelect').value = '';
       document.getElementById('moveToJobSelect').value = '';
+      document.getElementById('moveUsageCompany').value = '';
       document.getElementById('moveMaterialSelect').value = '';
       document.getElementById('moveQuantity').value = '';
       document.getElementById('moveUnit').value = '';
@@ -2639,6 +2668,7 @@
         toJobName: toJob.jobName || '',
         employeeId: employee.employeeId || '',
         employeeName: employee.employeeName || '',
+        usageCompany: document.getElementById('moveUsageCompany').value,
         memo: getValue('moveMemo')
       };
 
