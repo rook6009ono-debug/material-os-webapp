@@ -460,6 +460,71 @@
         width: auto;
       }
     }
+
+    /* 音声入力バー（各フォーム上部） */
+    .voice-bar {
+      background: var(--green-soft);
+      border: 1px solid #cfe0a8;
+      border-radius: 12px;
+      padding: 10px;
+      margin: 4px 0 10px;
+    }
+
+    .voice-bar-btn {
+      width: 100%;
+      border: 0;
+      border-radius: 10px;
+      background: var(--green);
+      color: #fff;
+      padding: 12px;
+      font-size: 15px;
+      font-weight: 800;
+      cursor: pointer;
+    }
+
+    .voice-bar-btn.recording {
+      background: #b00020;
+    }
+
+    .voice-heard {
+      color: var(--muted);
+      font-size: 13px;
+      margin-top: 6px;
+      min-height: 1em;
+    }
+
+    /* テキスト欄ごとのマイクボタン */
+    .field-mic {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 40px;
+      min-width: 40px;
+      height: 40px;
+      border: 1px solid var(--line);
+      border-radius: 9px;
+      background: #fff;
+      font-size: 18px;
+      cursor: pointer;
+      margin-top: 7px;
+      margin-bottom: 7px;
+    }
+
+    .field-mic.recording {
+      background: #ffe3e3;
+      border-color: #f5a3a3;
+    }
+
+    .field-wrap {
+      display: flex;
+      gap: 7px;
+      align-items: flex-start;
+    }
+
+    .field-wrap > input,
+    .field-wrap > textarea {
+      flex: 1;
+    }
   </style>
 </head>
 
@@ -493,11 +558,8 @@
     <div id="appTabs" class="tabs hidden">
       <button id="tabSearch" class="tab active" onclick="showScreen('search', this)">材料を探す</button>
       <button id="tabExcess" class="tab" onclick="showScreen('excess', this)">余り材料</button>
-      <button class="tab" onclick="showScreen('stock', this)">自社在庫</button>
-      <button class="tab" onclick="showScreen('cycle', this)">材料循環</button>
       <button id="tabOrder" class="tab" onclick="showScreen('order', this)">注文・入荷</button>
       <button id="tabMove" class="tab" onclick="showScreen('move', this)">現場間移動</button>
-      <button id="tabVoice" class="tab" onclick="showScreen('voice', this)">音声入力</button>
     </div>
 
     <div id="message" class="message"></div>
@@ -530,6 +592,13 @@
         <div class="out-summary">
           <div id="outMaterialTitle" class="out-material-title"></div>
           <div id="outMaterialInfo" class="small"></div>
+        </div>
+
+        <div class="voice-bar">
+          <button id="outVoiceBtn" class="voice-bar-btn" onclick="voiceFillForm('out', this)">
+            🎤 音声で数量を入れる
+          </button>
+          <div id="outVoiceHeard" class="voice-heard"></div>
         </div>
 
         <select id="outEmployeeSelect">
@@ -565,7 +634,10 @@
           </div>
         </div>
 
-        <textarea id="outMemo" placeholder="備考"></textarea>
+        <div class="field-wrap">
+          <textarea id="outMemo" placeholder="備考"></textarea>
+          <button class="field-mic" onclick="dictateToField('outMemo', this)" title="音声で入力">🎤</button>
+        </div>
 
         <button id="outSubmitBtn" class="main-btn" onclick="submitMaterialOut()">出庫登録</button>
         <button class="cancel-btn" onclick="cancelMaterialOut()">キャンセル</button>
@@ -639,6 +711,13 @@
         <span class="box-title">余り材料登録</span>
         <div class="sub-note">社員・工番を選んで、余った材料を登録します。</div>
 
+        <div class="voice-bar">
+          <button id="exVoiceBtn" class="voice-bar-btn" onclick="voiceFillForm('excess', this)">
+            🎤 音声で材料・数量を入れる
+          </button>
+          <div id="exVoiceHeard" class="voice-heard"></div>
+        </div>
+
         <select id="exEmployeeSelect">
           <option value="">社員を選択</option>
         </select>
@@ -660,14 +739,20 @@
           <option value="">材料マスターから選択</option>
         </select>
 
-        <input id="exMaterialName" placeholder="材料名 手入力・修正可">
+        <div class="field-wrap">
+          <input id="exMaterialName" placeholder="材料名 手入力・修正可">
+          <button class="field-mic" onclick="dictateToField('exMaterialName', this)" title="音声で入力">🎤</button>
+        </div>
 
         <div class="row">
           <select id="exQuantity">
             <option value="">数量</option>
           </select>
 
-          <input id="exUnit" placeholder="単位 例：個・缶・本">
+          <div class="field-wrap">
+            <input id="exUnit" placeholder="単位 例：個・缶・本">
+            <button class="field-mic" onclick="dictateToField('exUnit', this)" title="音声で入力">🎤</button>
+          </div>
         </div>
 
         <div class="row">
@@ -684,7 +769,10 @@
             <option value="0.9">0.9</option>
           </select>
 
-          <input id="exPartialUnit" placeholder="半端単位 例：缶・本・m">
+          <div class="field-wrap">
+            <input id="exPartialUnit" placeholder="半端単位 例：缶・本・m">
+            <button class="field-mic" onclick="dictateToField('exPartialUnit', this)" title="音声で入力">🎤</button>
+          </div>
         </div>
 
         <div class="row">
@@ -694,10 +782,16 @@
             <option value="半端あり">半端あり</option>
           </select>
 
-          <input id="exStorageStatus" placeholder="保管状態 例：倉庫棚A・現場保管">
+          <div class="field-wrap">
+            <input id="exStorageStatus" placeholder="保管状態 例：倉庫棚A・現場保管">
+            <button class="field-mic" onclick="dictateToField('exStorageStatus', this)" title="音声で入力">🎤</button>
+          </div>
         </div>
 
-        <textarea id="exMemo" placeholder="メモ"></textarea>
+        <div class="field-wrap">
+          <textarea id="exMemo" placeholder="メモ"></textarea>
+          <button class="field-mic" onclick="dictateToField('exMemo', this)" title="音声で入力">🎤</button>
+        </div>
 
         <button id="exSubmitBtn" class="main-btn" onclick="submitExcessMaterial()">余り材を登録</button>
       </div>
@@ -708,6 +802,13 @@
       <div class="box">
         <span class="box-title">入荷登録</span>
         <div class="sub-note">倉庫に入った材料を登録します。</div>
+
+        <div class="voice-bar">
+          <button id="arrivalVoiceBtn" class="voice-bar-btn" onclick="voiceFillForm('arrival', this)">
+            🎤 音声で材料・数量を入れる
+          </button>
+          <div id="arrivalVoiceHeard" class="voice-heard"></div>
+        </div>
 
         <input id="arrivalDate" type="date">
 
@@ -748,7 +849,10 @@
           </div>
         </div>
 
-        <textarea id="arrivalMemo" placeholder="備考"></textarea>
+        <div class="field-wrap">
+          <textarea id="arrivalMemo" placeholder="備考"></textarea>
+          <button class="field-mic" onclick="dictateToField('arrivalMemo', this)" title="音声で入力">🎤</button>
+        </div>
 
         <button id="arrivalSubmitBtn" class="main-btn" onclick="submitArrival()">入荷登録</button>
       </div>
@@ -759,6 +863,13 @@
       <div class="box">
         <span class="box-title">現場間移動</span>
         <div class="sub-note">現場Aから現場Bへ材料を移動します。会社全体の在庫数は変わりません。</div>
+
+        <div class="voice-bar">
+          <button id="moveVoiceBtn" class="voice-bar-btn" onclick="voiceFillForm('move', this)">
+            🎤 音声で材料・数量を入れる
+          </button>
+          <div id="moveVoiceHeard" class="voice-heard"></div>
+        </div>
 
         <select id="moveEmployeeSelect">
           <option value="">担当者を選択</option>
@@ -803,114 +914,15 @@
           <input id="moveUnit" placeholder="単位" readonly>
         </div>
 
-        <textarea id="moveMemo" placeholder="備考"></textarea>
+        <div class="field-wrap">
+          <textarea id="moveMemo" placeholder="備考"></textarea>
+          <button class="field-mic" onclick="dictateToField('moveMemo', this)" title="音声で入力">🎤</button>
+        </div>
 
         <button id="moveSubmitBtn" class="main-btn" onclick="submitMaterialMove()">現場間移動を登録</button>
       </div>
     </section>
 
-    <!-- 音声入力 -->
-    <section id="screenVoice" class="hidden">
-      <div class="box">
-        <span class="box-title">音声入力</span>
-        <div class="sub-note">
-          <b>使い方：</b>「録音開始」→ 話す →「停止」で自動的に文字になります。<br>
-          例：「自着シート 3本 出庫」「サンセット 2個 入荷」<br>
-          （キーボードのマイクボタンや手入力でもOKです）
-        </div>
-
-        <div class="row">
-          <button id="voiceRecBtn" class="main-btn" onclick="startVoiceRecording()">🎤 録音開始</button>
-          <button id="voiceRecStopBtn" class="cancel-btn" onclick="stopVoiceRecording()" disabled>停止して文字にする</button>
-        </div>
-
-        <div id="voiceSupportNote" class="sub-note hidden">
-          このブラウザは録音に対応していません。テキスト入力をご利用ください。
-        </div>
-
-        <textarea id="voiceText" placeholder="音声テキスト（手入力・修正できます）"></textarea>
-
-        <select id="voiceActionSelect" onchange="onVoiceActionTypeChange()">
-          <option value="">処理区分（解析で自動判定）</option>
-          <option value="出庫">出庫</option>
-          <option value="入荷">入荷</option>
-          <option value="余り戻し">余り戻し</option>
-          <option value="現場間移動">現場間移動</option>
-        </select>
-
-        <select id="voiceEmployeeSelect">
-          <option value="">社員を選択</option>
-        </select>
-
-        <div id="voiceJobArea">
-          <input
-            id="voiceJobKeyword"
-            placeholder="工番・現場名で検索"
-            oninput="renderVoiceJobOptions()"
-          >
-
-          <select id="voiceJobSelect">
-            <option value="">工番を選択（入荷は省略可）</option>
-          </select>
-        </div>
-
-        <div id="voiceMoveArea" class="hidden">
-          <div class="sub-note">移動元</div>
-
-          <input
-            id="voiceFromJobKeyword"
-            placeholder="移動元の工番・現場名で検索"
-            oninput="renderVoiceFromJobOptions()"
-          >
-
-          <select id="voiceFromJobSelect">
-            <option value="">移動元の工番を選択</option>
-          </select>
-
-          <div class="sub-note">移動先</div>
-
-          <input
-            id="voiceToJobKeyword"
-            placeholder="移動先の工番・現場名で検索"
-            oninput="renderVoiceToJobOptions()"
-          >
-
-          <select id="voiceToJobSelect">
-            <option value="">移動先の工番を選択</option>
-          </select>
-        </div>
-
-        <button id="voiceAnalyzeBtn" class="main-btn" onclick="analyzeVoiceText()">解析する</button>
-
-        <div id="voiceResultBox" class="out-summary hidden">
-          <div id="voiceResultTitle" class="out-material-title"></div>
-          <div id="voiceResultInfo" class="small"></div>
-        </div>
-
-        <div id="voiceConfirmArea" class="hidden">
-          <div class="row">
-            <input id="voiceQuantity" type="number" step="0.1" placeholder="数量（修正可）">
-            <input id="voiceUnit" placeholder="単位（修正可）">
-          </div>
-
-          <button id="voiceRegisterBtn" class="main-btn hidden" onclick="submitVoiceAction()">この内容で登録</button>
-
-          <div id="voiceTempArea" class="hidden">
-            <div class="sub-note">材料マスターに見つかりませんでした。仮材料として登録できます。</div>
-            <input id="voiceTempName" placeholder="仮材料名（修正可）">
-            <button id="voiceTempBtn" class="main-btn" onclick="submitVoiceTemporary()">仮材料として登録</button>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- 仮画面 -->
-    <section id="screenComingSoon" class="hidden">
-      <div class="box">
-        <span id="comingSoonTitle" class="box-title">準備中</span>
-        <div class="sub-note">この機能は次の工程で作ります。</div>
-      </div>
-    </section>
   </div>
 
   <script>
@@ -1089,7 +1101,7 @@
       document.getElementById('appTabs').classList.add('hidden');
       document.getElementById('logoutLink').classList.add('hidden');
 
-      ['screenSearch', 'screenExcess', 'screenOrder', 'screenMove', 'screenVoice', 'screenComingSoon']
+      ['screenSearch', 'screenExcess', 'screenOrder', 'screenMove']
         .forEach(function(id) {
           document.getElementById(id).classList.add('hidden');
         });
@@ -1120,8 +1132,6 @@
       document.getElementById('screenExcess').classList.add('hidden');
       document.getElementById('screenOrder').classList.add('hidden');
       document.getElementById('screenMove').classList.add('hidden');
-      document.getElementById('screenVoice').classList.add('hidden');
-      document.getElementById('screenComingSoon').classList.add('hidden');
 
       document.querySelectorAll('.tab').forEach(function(tab) {
         tab.classList.remove('active');
@@ -1150,21 +1160,6 @@
       if (screen === 'move') {
         document.getElementById('screenMove').classList.remove('hidden');
         return;
-      }
-
-      if (screen === 'voice') {
-        document.getElementById('screenVoice').classList.remove('hidden');
-        return;
-      }
-
-      document.getElementById('screenComingSoon').classList.remove('hidden');
-
-      if (screen === 'stock') {
-        document.getElementById('comingSoonTitle').innerText = '自社在庫：準備中';
-      }
-
-      if (screen === 'cycle') {
-        document.getElementById('comingSoonTitle').innerText = '材料循環：準備中';
       }
     }
 
@@ -1227,11 +1222,6 @@
       renderMoveCategoryButtons();
       renderMoveMaterialOptions();
       renderMoveQuantityOptions();
-
-      renderVoiceEmployeeOptions();
-      renderVoiceJobOptions();
-      renderVoiceFromJobOptions();
-      renderVoiceToJobOptions();
     }
 
     function renderEmployeeOptions() {
@@ -2572,521 +2562,203 @@
     }
 
     // ==================================================
-    // 音声入力
+    // 音声入力（各フォーム共通）
     // ==================================================
 
-    let voiceAnalysis = null;
-    let voiceMediaRecorder = null;
-    let voiceAudioChunks = [];
+    // いま音声認識中のインスタンス（同時に1つだけ）
+    let activeVoiceRec = null;
 
-    function renderVoiceEmployeeOptions() {
-      const select = document.getElementById('voiceEmployeeSelect');
-
-      if (!select) return;
-
-      select.innerHTML =
-        '<option value="">社員を選択</option>' +
-        appData.employees.map(function(emp) {
-          const label = emp.employeeId + '　' + emp.employeeName;
-          return '<option value="' + escapeAttr(emp.employeeId) + '">' + escapeHtml(label) + '</option>';
-        }).join('');
+    function getSpeechRec() {
+      return window.SpeechRecognition || window.webkitSpeechRecognition;
     }
 
-    function renderVoiceJobOptions() {
-      renderJobSelectOptions('voiceJobSelect', 'voiceJobKeyword', '工番を選択（入荷は省略可）');
-    }
+    // 単一フィールドへの音声入力（材料名・単位・備考など）
+    function dictateToField(fieldId, btn) {
+      const SR = getSpeechRec();
 
-    function renderVoiceFromJobOptions() {
-      renderJobSelectOptions('voiceFromJobSelect', 'voiceFromJobKeyword', '移動元の工番を選択');
-    }
-
-    function renderVoiceToJobOptions() {
-      renderJobSelectOptions('voiceToJobSelect', 'voiceToJobKeyword', '移動先の工番を選択');
-    }
-
-    function onVoiceActionTypeChange() {
-      const actionType = document.getElementById('voiceActionSelect').value;
-      const isMove = actionType === '現場間移動';
-
-      document.getElementById('voiceJobArea').classList.toggle('hidden', isMove);
-      document.getElementById('voiceMoveArea').classList.toggle('hidden', !isMove);
-    }
-
-    function resetVoiceRecButtons() {
-      const recBtn = document.getElementById('voiceRecBtn');
-      const stopBtn = document.getElementById('voiceRecStopBtn');
-
-      recBtn.disabled = false;
-      recBtn.innerText = '🎤 録音開始';
-      stopBtn.disabled = true;
-    }
-
-    function showVoiceKeyboardNote() {
-      const note = document.getElementById('voiceSupportNote');
-
-      note.innerText =
-        'この環境ではマイクが使えません。' +
-        'テキスト欄をタップして、キーボードのマイクボタン（音声入力）をご利用ください。';
-      note.classList.remove('hidden');
-    }
-
-    let voiceSpeechRec = null;
-
-    function startVoiceRecording() {
-      // 外部ホスティング版ではブラウザ標準の音声認識が使える（無料・即時）
-      const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
-
-      if (SpeechRec) {
-        startSpeechRecognition(SpeechRec);
+      if (!SR) {
+        showMessage('この端末ではマイクが使えません。キーボードのマイクで入力してください', true);
         return;
       }
 
-      // 非対応ブラウザは録音→Gemini文字起こしへフォールバック
-      startAudioRecording();
-    }
+      // すでに録音中なら停止（トグル）
+      if (activeVoiceRec) {
+        activeVoiceRec.stop();
+        return;
+      }
 
-    function startSpeechRecognition(SpeechRec) {
-      voiceSpeechRec = new SpeechRec();
-      voiceSpeechRec.lang = 'ja-JP';
-      voiceSpeechRec.interimResults = false;
-      voiceSpeechRec.continuous = false;
+      const el = document.getElementById(fieldId);
+      const rec = new SR();
 
-      voiceSpeechRec.onresult = function(event) {
+      rec.lang = 'ja-JP';
+      rec.interimResults = false;
+      rec.continuous = false;
+
+      if (btn) btn.classList.add('recording');
+      activeVoiceRec = rec;
+
+      rec.onresult = function(event) {
         const transcript = event.results[0][0].transcript;
-        const el = document.getElementById('voiceText');
+        el.value = (el.value ? el.value.trim() + ' ' : '') + transcript;
 
-        el.value = (el.value ? el.value + ' ' : '') + transcript;
+        if (typeof el.onchange === 'function') el.onchange();
       };
 
-      voiceSpeechRec.onerror = function(event) {
-        voiceSpeechRec = null;
-
-        if (event.error === 'not-allowed' || event.error === 'service-not-allowed') {
-          // 音声認識が使えない環境 → 録音→Gemini文字起こしを試す
-          resetVoiceRecButtons();
-          startAudioRecording();
-        } else if (event.error === 'no-speech') {
-          showMessage('音声が聞き取れませんでした。もう一度お試しください', true);
-          resetVoiceRecButtons();
-        } else {
-          showMessage('音声認識エラー：' + (event.error || ''), true);
-          resetVoiceRecButtons();
-        }
+      rec.onerror = function(event) {
+        handleVoiceError_(event.error);
       };
 
-      voiceSpeechRec.onend = function() {
-        voiceSpeechRec = null;
-        resetVoiceRecButtons();
+      rec.onend = function() {
+        activeVoiceRec = null;
+        if (btn) btn.classList.remove('recording');
       };
 
-      const recBtn = document.getElementById('voiceRecBtn');
-      const stopBtn = document.getElementById('voiceRecStopBtn');
-
-      recBtn.disabled = true;
-      recBtn.innerText = '🔴 聞き取り中...';
-      stopBtn.disabled = false;
-
-      voiceSpeechRec.start();
+      rec.start();
     }
 
-    function startAudioRecording() {
-      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia || !window.MediaRecorder) {
-        showVoiceKeyboardNote();
-        showMessage('このブラウザは録音に対応していません。キーボードの音声入力をご利用ください', true);
+    // フォーム全体の音声入力（1文を話す→材料・数量・単位を自動で埋める）
+    function voiceFillForm(kind, btn) {
+      const SR = getSpeechRec();
+
+      if (!SR) {
+        showMessage('この端末ではマイクが使えません。キーボードのマイクで各欄に入力してください', true);
         return;
       }
 
-      navigator.mediaDevices.getUserMedia({ audio: true })
-        .then(function(stream) {
-          let mimeType = '';
+      if (activeVoiceRec) {
+        activeVoiceRec.stop();
+        return;
+      }
 
-          const candidates = [
-            'audio/webm;codecs=opus',
-            'audio/webm',
-            'audio/mp4',
-            'audio/ogg;codecs=opus'
-          ];
+      const heardEl = document.getElementById(kind + 'VoiceHeard');
+      const originalText = btn.innerText;
+      const rec = new SR();
 
-          for (let i = 0; i < candidates.length; i++) {
-            if (MediaRecorder.isTypeSupported && MediaRecorder.isTypeSupported(candidates[i])) {
-              mimeType = candidates[i];
-              break;
+      rec.lang = 'ja-JP';
+      rec.interimResults = false;
+      rec.continuous = false;
+
+      btn.classList.add('recording');
+      btn.innerText = '🔴 聞き取り中...';
+      activeVoiceRec = rec;
+
+      rec.onresult = function(event) {
+        const text = event.results[0][0].transcript;
+        if (heardEl) heardEl.innerText = '認識：' + text + '（解析中...）';
+        applyVoiceToForm(kind, text, heardEl);
+      };
+
+      rec.onerror = function(event) {
+        handleVoiceError_(event.error);
+      };
+
+      rec.onend = function() {
+        activeVoiceRec = null;
+        btn.classList.remove('recording');
+        btn.innerText = originalText;
+      };
+
+      rec.start();
+    }
+
+    function handleVoiceError_(error) {
+      if (error === 'not-allowed' || error === 'service-not-allowed') {
+        showMessage('マイクが許可されていません。端末のマイク設定を確認してください', true);
+      } else if (error === 'no-speech') {
+        showMessage('音声が聞き取れませんでした。もう一度お試しください', true);
+      } else if (error && error !== 'aborted') {
+        showMessage('音声エラー：' + error, true);
+      }
+    }
+
+    // 話した1文をサーバーで解析し、対象フォームの欄を埋める
+    function applyVoiceToForm(kind, text, heardEl) {
+      google.script.run
+        .withSuccessHandler(function(res) {
+          const parsed = (res && res.parsed) || {};
+          const match = (res && res.match) || {};
+
+          fillFormFields_(kind, parsed, match);
+
+          if (heardEl) {
+            if (match.matched) {
+              heardEl.innerText = '認識：' + text + ' → ' + match.materialName +
+                (parsed.quantity ? ' ' + parsed.quantity + (parsed.unit || match.unit || '') : '');
+            } else if (parsed.materialName) {
+              heardEl.innerText = '認識：' + text +
+                ' → 「' + parsed.materialName + '」は未登録。材料名欄に入れました（手入力・修正できます）';
+            } else {
+              heardEl.innerText = '認識：' + text + '（材料名が聞き取れませんでした）';
             }
           }
-
-          voiceMediaRecorder = mimeType
-            ? new MediaRecorder(stream, { mimeType: mimeType })
-            : new MediaRecorder(stream);
-
-          voiceAudioChunks = [];
-
-          voiceMediaRecorder.ondataavailable = function(event) {
-            if (event.data && event.data.size > 0) {
-              voiceAudioChunks.push(event.data);
-            }
-          };
-
-          voiceMediaRecorder.onstop = function() {
-            stream.getTracks().forEach(function(track) {
-              track.stop();
-            });
-
-            const blob = new Blob(voiceAudioChunks, {
-              type: voiceMediaRecorder.mimeType || mimeType || 'audio/webm'
-            });
-
-            sendVoiceAudio(blob);
-          };
-
-          voiceMediaRecorder.start();
-
-          const recBtn = document.getElementById('voiceRecBtn');
-          const stopBtn = document.getElementById('voiceRecStopBtn');
-
-          recBtn.disabled = true;
-          recBtn.innerText = '🔴 録音中...';
-          stopBtn.disabled = false;
-        })
-        .catch(function(err) {
-          if (err && (err.name === 'NotAllowedError' || err.name === 'SecurityError')) {
-            showVoiceKeyboardNote();
-            showMessage('マイクが許可されていません。キーボードの音声入力をご利用ください', true);
-          } else {
-            showMessage('録音エラー：' + (err && err.name || err), true);
-          }
-
-          resetVoiceRecButtons();
-        });
-    }
-
-    function stopVoiceRecording() {
-      // ブラウザ音声認識で聞き取り中の場合
-      if (voiceSpeechRec) {
-        voiceSpeechRec.stop();
-        return;
-      }
-
-      // 録音（Gemini文字起こし）の場合
-      if (voiceMediaRecorder && voiceMediaRecorder.state !== 'inactive') {
-        voiceMediaRecorder.stop();
-
-        const recBtn = document.getElementById('voiceRecBtn');
-        recBtn.innerText = '文字起こし中...';
-
-        document.getElementById('voiceRecStopBtn').disabled = true;
-        return;
-      }
-
-      resetVoiceRecButtons();
-    }
-
-    function sendVoiceAudio(blob) {
-      if (!blob || blob.size === 0) {
-        showMessage('録音データがありません', true);
-        resetVoiceRecButtons();
-        return;
-      }
-
-      if (blob.size > 4 * 1024 * 1024) {
-        showMessage('録音が長すぎます。短く話して再度お試しください', true);
-        resetVoiceRecButtons();
-        return;
-      }
-
-      const reader = new FileReader();
-
-      reader.onload = function() {
-        const base64 = String(reader.result).split(',')[1] || '';
-        const mimeType = String(blob.type || 'audio/webm').split(';')[0];
-
-        google.script.run
-          .withSuccessHandler(function(res) {
-            const el = document.getElementById('voiceText');
-
-            el.value = (el.value ? el.value + ' ' : '') + (res.text || '');
-
-            resetVoiceRecButtons();
-            showMessage('文字起こししました。内容を確認して「解析する」を押してください', false);
-          })
-          .withFailureHandler(function(error) {
-            resetVoiceRecButtons();
-            showMessage('文字起こしエラー：' + (error.message || error), true);
-          })
-          .transcribeVoiceAudio({
-            base64: base64,
-            mimeType: mimeType
-          });
-      };
-
-      reader.onerror = function() {
-        showMessage('録音データの読み込みに失敗しました', true);
-        resetVoiceRecButtons();
-      };
-
-      reader.readAsDataURL(blob);
-    }
-
-    function analyzeVoiceText() {
-      const text = getValue('voiceText');
-
-      if (!text) {
-        showMessage('音声テキストを入力してください', true);
-        return;
-      }
-
-      const employeeId = document.getElementById('voiceEmployeeSelect').value;
-      const employee = findEmployeeById(employeeId);
-      const jobNo = document.getElementById('voiceJobSelect').value;
-      const job = findJobByNo(jobNo);
-
-      const analyzeBtn = document.getElementById('voiceAnalyzeBtn');
-      analyzeBtn.disabled = true;
-      analyzeBtn.innerText = '解析中...';
-
-      google.script.run
-        .withSuccessHandler(function(res) {
-          analyzeBtn.disabled = false;
-          analyzeBtn.innerText = '解析する';
-
-          voiceAnalysis = res;
-
-          const parsed = res.parsed || {};
-          const match = res.match || {};
-
-          const actionSelect = document.getElementById('voiceActionSelect');
-
-          if (parsed.actionType) {
-            actionSelect.value = parsed.actionType;
-            onVoiceActionTypeChange();
-          }
-
-          document.getElementById('voiceQuantity').value = parsed.quantity || '';
-          document.getElementById('voiceUnit').value = parsed.unit || match.unit || '';
-
-          const resultBox = document.getElementById('voiceResultBox');
-          const resultTitle = document.getElementById('voiceResultTitle');
-          const resultInfo = document.getElementById('voiceResultInfo');
-          const registerBtn = document.getElementById('voiceRegisterBtn');
-          const tempArea = document.getElementById('voiceTempArea');
-
-          resultBox.classList.remove('hidden');
-          document.getElementById('voiceConfirmArea').classList.remove('hidden');
-
-          if (match.matched) {
-            resultTitle.innerText = '一致：' + (match.materialName || '');
-            resultInfo.innerText =
-              '材料ID：' + (match.materialId || '') +
-              ' / カテゴリ：' + (match.category || '-') +
-              ' / 単位：' + (match.unit || '-') +
-              ' / 一致方法：' + (match.matchType || '-') +
-              ' / 処理区分：' + (parsed.actionType || '未判定');
-
-            registerBtn.classList.remove('hidden');
-            tempArea.classList.add('hidden');
-          } else {
-            resultTitle.innerText = '未登録材料';
-            resultInfo.innerText =
-              '「' + (parsed.materialName || text) + '」は材料マスター・別名マスターに見つかりませんでした';
-
-            document.getElementById('voiceTempName').value = parsed.materialName || '';
-
-            registerBtn.classList.add('hidden');
-            tempArea.classList.remove('hidden');
-          }
         })
         .withFailureHandler(function(error) {
-          analyzeBtn.disabled = false;
-          analyzeBtn.innerText = '解析する';
-
-          showMessage('解析エラー：' + (error.message || error), true);
+          if (heardEl) heardEl.innerText = '解析エラー：' + (error.message || error);
         })
-        .analyzeVoiceMaterialInput({
-          text: text,
-          employeeId: employee.employeeId || '',
-          employeeName: employee.employeeName || '',
-          jobNo: job.jobNo || '',
-          jobName: job.jobName || ''
-        });
+        .parseVoiceInput({ text: text });
     }
 
-    function resetVoiceForm() {
-      voiceAnalysis = null;
+    function setSelectByValue_(selectId, value) {
+      const select = document.getElementById(selectId);
+      if (!select) return false;
 
-      document.getElementById('voiceText').value = '';
-      document.getElementById('voiceActionSelect').value = '';
-      document.getElementById('voiceQuantity').value = '';
-      document.getElementById('voiceUnit').value = '';
-      document.getElementById('voiceTempName').value = '';
-      document.getElementById('voiceResultBox').classList.add('hidden');
-      document.getElementById('voiceConfirmArea').classList.add('hidden');
-      document.getElementById('voiceRegisterBtn').classList.add('hidden');
-      document.getElementById('voiceTempArea').classList.add('hidden');
-
-      onVoiceActionTypeChange();
+      const val = String(value);
+      for (let i = 0; i < select.options.length; i++) {
+        if (String(select.options[i].value) === val) {
+          select.value = val;
+          return true;
+        }
+      }
+      return false;
     }
 
-    function submitVoiceAction() {
-      if (!voiceAnalysis || !voiceAnalysis.match || !voiceAnalysis.match.matched) {
-        showMessage('先に解析して材料を確定してください', true);
+    function fillFormFields_(kind, parsed, match) {
+      const qty = parsed.quantity || '';
+      const unit = parsed.unit || (match.matched ? match.unit : '');
+
+      if (kind === 'out') {
+        // 出庫は材料が確定済み。数量のみ反映
+        if (qty) setSelectByValue_('outQuantity', qty);
+        updateOutAmount();
         return;
       }
 
-      const match = voiceAnalysis.match;
-      const actionType = document.getElementById('voiceActionSelect').value;
-      const employeeId = document.getElementById('voiceEmployeeSelect').value;
-      const quantity = Number(document.getElementById('voiceQuantity').value || 0);
-
-      if (!actionType) {
-        showMessage('処理区分を選択してください', true);
-        return;
-      }
-
-      if (!employeeId) {
-        showMessage('社員を選択してください', true);
-        return;
-      }
-
-      if (!quantity || quantity <= 0) {
-        showMessage('数量を入力してください', true);
-        return;
-      }
-
-      const employee = findEmployeeById(employeeId);
-
-      const payload = {
-        actionType: actionType,
-        materialId: match.materialId || '',
-        materialName: match.materialName || '',
-        quantity: quantity,
-        unit: getValue('voiceUnit') || match.unit || '',
-        employeeId: employee.employeeId || '',
-        employeeName: employee.employeeName || '',
-        voiceText: getValue('voiceText'),
-        jobNo: '',
-        jobName: '',
-        fromJobNo: '',
-        fromJobName: '',
-        toJobNo: '',
-        toJobName: ''
-      };
-
-      if (actionType === '現場間移動') {
-        const fromJobNo = document.getElementById('voiceFromJobSelect').value;
-        const toJobNo = document.getElementById('voiceToJobSelect').value;
-
-        if (!fromJobNo) {
-          showMessage('移動元の工番を選択してください', true);
-          return;
+      if (kind === 'excess') {
+        if (match.matched) {
+          if (setSelectByValue_('exMaterialSelect', match.materialId)) {
+            onExcessMaterialChange();
+          }
+          document.getElementById('exMaterialName').value = match.materialName || '';
+        } else if (parsed.materialName) {
+          document.getElementById('exMaterialName').value = parsed.materialName;
         }
-
-        if (!toJobNo) {
-          showMessage('移動先の工番を選択してください', true);
-          return;
-        }
-
-        if (fromJobNo === toJobNo) {
-          showMessage('移動元と移動先が同じです', true);
-          return;
-        }
-
-        const fromJob = findJobByNo(fromJobNo);
-        const toJob = findJobByNo(toJobNo);
-
-        payload.fromJobNo = fromJob.jobNo || '';
-        payload.fromJobName = fromJob.jobName || '';
-        payload.toJobNo = toJob.jobNo || '';
-        payload.toJobName = toJob.jobName || '';
-      } else {
-        const jobNo = document.getElementById('voiceJobSelect').value;
-
-        if (!jobNo && actionType !== '入荷') {
-          showMessage('工番を選択してください', true);
-          return;
-        }
-
-        const job = findJobByNo(jobNo);
-
-        payload.jobNo = job.jobNo || '';
-        payload.jobName = job.jobName || '';
-      }
-
-      const registerBtn = document.getElementById('voiceRegisterBtn');
-      registerBtn.disabled = true;
-      registerBtn.innerText = '登録中...';
-
-      google.script.run
-        .withSuccessHandler(function(res) {
-          registerBtn.disabled = false;
-          registerBtn.innerText = 'この内容で登録';
-
-          showMessage(res.actionType + 'を登録しました：' + res.resultId, false);
-
-          resetVoiceForm();
-          loadAppData();
-        })
-        .withFailureHandler(function(error) {
-          registerBtn.disabled = false;
-          registerBtn.innerText = 'この内容で登録';
-
-          showMessage('音声登録エラー：' + (error.message || error), true);
-        })
-        .registerVoiceMaterialAction(payload);
-    }
-
-    function submitVoiceTemporary() {
-      const temporaryName = getValue('voiceTempName');
-      const employeeId = document.getElementById('voiceEmployeeSelect').value;
-
-      if (!temporaryName) {
-        showMessage('仮材料名を入力してください', true);
+        if (qty) setSelectByValue_('exQuantity', qty);
+        if (unit) document.getElementById('exUnit').value = unit;
         return;
       }
 
-      if (!employeeId) {
-        showMessage('社員を選択してください', true);
+      if (kind === 'arrival') {
+        if (match.matched) {
+          if (setSelectByValue_('arrivalMaterialSelect', match.materialId)) {
+            onArrivalMaterialChange();
+          }
+        }
+        if (qty) setSelectByValue_('arrivalQuantity', qty);
+        if (unit && !match.matched) document.getElementById('arrivalUnit').value = unit;
+        updateArrivalAmount();
         return;
       }
 
-      const employee = findEmployeeById(employeeId);
-      const jobNo = document.getElementById('voiceJobSelect').value;
-      const job = findJobByNo(jobNo);
-
-      const parsed = (voiceAnalysis && voiceAnalysis.parsed) || {};
-
-      const payload = {
-        voiceText: getValue('voiceText'),
-        temporaryName: temporaryName,
-        categoryCandidate: '',
-        unitCandidate: getValue('voiceUnit') || parsed.unit || '',
-        quantity: Number(document.getElementById('voiceQuantity').value || 0),
-        employeeId: employee.employeeId || '',
-        employeeName: employee.employeeName || '',
-        jobNo: job.jobNo || '',
-        jobName: job.jobName || '',
-        actionType: document.getElementById('voiceActionSelect').value || parsed.actionType || '',
-        memo: ''
-      };
-
-      const tempBtn = document.getElementById('voiceTempBtn');
-      tempBtn.disabled = true;
-      tempBtn.innerText = '仮登録中...';
-
-      google.script.run
-        .withSuccessHandler(function(res) {
-          tempBtn.disabled = false;
-          tempBtn.innerText = '仮材料として登録';
-
-          showMessage('仮材料を登録しました：' + res.temporaryId, false);
-
-          resetVoiceForm();
-        })
-        .withFailureHandler(function(error) {
-          tempBtn.disabled = false;
-          tempBtn.innerText = '仮材料として登録';
-
-          showMessage('仮材料登録エラー：' + (error.message || error), true);
-        })
-        .registerTemporaryMaterialFromVoice(payload);
+      if (kind === 'move') {
+        if (match.matched) {
+          if (setSelectByValue_('moveMaterialSelect', match.materialId)) {
+            onMoveMaterialChange();
+          }
+        }
+        if (qty) setSelectByValue_('moveQuantity', qty);
+        if (unit && !match.matched) document.getElementById('moveUnit').value = unit;
+        return;
+      }
     }
 
     initApp();
