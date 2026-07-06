@@ -2701,9 +2701,11 @@
 
     function candidateLabel_(mat) {
       return '<b>' + escapeHtml(mat.materialName || '') + '</b>' +
+        '　<span class="badge badge-location-default">' +
+        escapeHtml(mat.category || 'カテゴリなし') +
+        '</span>' +
         '<div class="small">' +
-        escapeHtml((mat.category || '-') + ' / 単位：' + (mat.unit || '-') +
-          ' / ' + (mat.materialId || '')) +
+        escapeHtml('単位：' + (mat.unit || '-') + ' / ' + (mat.materialId || '')) +
         '</div>';
     }
 
