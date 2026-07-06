@@ -1154,6 +1154,7 @@
           btn.innerText = 'ログイン';
 
           SESSION.companyName = (res && res.companyName) || companyCode;
+          SESSION.role = (res && res.role) || 'admin';
           saveSession();
 
           showApp();
@@ -1177,7 +1178,16 @@
       document.getElementById('headerCompany').innerText =
         SESSION && SESSION.companyName ? '｜' + SESSION.companyName : '';
 
+      applyRoleToTabs();
+
       showScreen('search', document.getElementById('tabSearch'));
+    }
+
+    // 権限に応じてタブの表示を切り替える（材料登録は管理者のみ）
+    function applyRoleToTabs() {
+      const isAdmin = !SESSION || !SESSION.role || SESSION.role === 'admin';
+
+      document.getElementById('tabMaster').classList.toggle('hidden', !isAdmin);
     }
 
     function showLoginScreen() {
@@ -1206,6 +1216,18 @@
       if (SESSION && SESSION.apiUrl && SESSION.apiKey && SESSION.companyCode) {
         showApp();
         loadAppData();
+
+        // 旧バージョンで保存されたセッションには権限情報が無いため、取得し直す
+        if (!SESSION.role) {
+          google.script.run
+            .withSuccessHandler(function(res) {
+              SESSION.role = (res && res.role) || 'admin';
+              saveSession();
+              applyRoleToTabs();
+            })
+            .withFailureHandler(function() {})
+            .ping({});
+        }
       } else {
         showLoginScreen();
       }
@@ -1248,6 +1270,12 @@
       }
 
       if (screen === 'master') {
+        if (SESSION && SESSION.role === 'staff') {
+          showMessage('材料登録は管理者のみ使用できます', true);
+          showScreen('search', document.getElementById('tabSearch'));
+          return;
+        }
+
         document.getElementById('screenMaster').classList.remove('hidden');
         loadTemporaryMaterials();
         return;
