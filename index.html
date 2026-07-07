@@ -758,8 +758,10 @@
           inputmode="numeric"
           autocomplete="off"
           placeholder="工番を入力（数字で絞込）"
+          oninput="updateJobSiteName('exJobSelect', 'exJobSiteName')"
         >
         <datalist id="exJobData"></datalist>
+        <div id="exJobSiteName" class="voice-heard"></div>
 
         <div class="sub-note">カテゴリ</div>
         <div id="excessCategoryButtons" class="category-row"></div>
@@ -917,8 +919,10 @@
           inputmode="numeric"
           autocomplete="off"
           placeholder="移動元の工番を入力（数字で絞込）"
+          oninput="updateJobSiteName('moveFromJobSelect', 'moveFromJobSiteName')"
         >
         <datalist id="moveFromJobData"></datalist>
+        <div id="moveFromJobSiteName" class="voice-heard"></div>
 
         <div class="sub-note">移動先</div>
 
@@ -928,8 +932,10 @@
           inputmode="numeric"
           autocomplete="off"
           placeholder="移動先の工番を入力（数字で絞込）"
+          oninput="updateJobSiteName('moveToJobSelect', 'moveToJobSiteName')"
         >
         <datalist id="moveToJobData"></datalist>
+        <div id="moveToJobSiteName" class="voice-heard"></div>
 
         <select id="moveUsageCompany">
           <option value="">使用会社を選択</option>
@@ -2385,6 +2391,7 @@
       suggestBox.innerHTML = '';
       suggestBox.classList.add('hidden');
       hideVoiceCandidates('excess');
+      document.getElementById('exJobSiteName').innerText = '';
     }
 
     function clearArrivalForm() {
@@ -2480,6 +2487,25 @@
       return appData.jobs.find(function(job) {
         return String(job.jobNo) === String(jobNo);
       }) || {};
+    }
+
+    // 工番入力欄の下に現場名を自動表示する
+    function updateJobSiteName(inputId, labelId) {
+      const input = document.getElementById(inputId);
+      const label = document.getElementById(labelId);
+
+      if (!input || !label) return;
+
+      const value = input.value.trim();
+
+      if (!value) {
+        label.innerText = '';
+        return;
+      }
+
+      const job = findJobByNo(value);
+
+      label.innerText = job.jobName ? '現場：' + job.jobName : '（該当する工番がありません）';
     }
 
     function renderMoveEmployeeOptions() {
@@ -2598,6 +2624,8 @@
       renderMoveFromJobOptions();
       renderMoveToJobOptions();
       hideVoiceCandidates('move');
+      document.getElementById('moveFromJobSiteName').innerText = '';
+      document.getElementById('moveToJobSiteName').innerText = '';
     }
 
     function submitMaterialMove() {
